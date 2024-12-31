@@ -1,17 +1,29 @@
 {
-    "appId": "com.electron.app",
+    "appId": "com.prodbybitmap.esd",
     "directories": {
         "output": "dist"
     },
 
+    "dmg": {
+        "title": "Bitmap"
+    },
     "nsis": {
         "oneClick": false,
         "perMachine": false,
         "allowToChangeInstallationDirectory": true,
         "shortcutName": "Electron App"
     },
+
     "win": {
         "target": "nsis"
+    },
+    "mac": {
+        "category": "public.app-category.utilities",
+        "target": {
+            "target": "dmg",
+            "arch": [ "universal" ]
+        },
+        "icon": "assets/AppIcon.icns"
     },
     "linux":  {
         "target": ["snap"]
@@ -32,8 +44,10 @@
             "to": "static",
             "filter": ["**/*"]
         },
-	"!build",
-	"!dist",
-	"!scripts"
+	    "!build",
+	    "!dist",
+	    "!scripts",
+        "!.idea",
+        "!.vscode"
     ]
 }
