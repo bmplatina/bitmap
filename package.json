@@ -1,7 +1,7 @@
 {
-  "name": "electron-vue-template",
+  "name": "bitmap",
   "version": "0.1.0",
-  "description": "A minimal Electron + Vue application",
+  "description": "An Integrated Bitmap Application",
   "main": "main/main.js",
   "scripts": {
     "dev": "node scripts/dev-server.js",
@@ -12,8 +12,8 @@
   },
   "repository": "https://github.com/deluze/electron-vue-template",
   "author": {
-    "name": "Deluze",
-    "url": "https://github.com/Deluze"
+    "name": "Platina",
+    "url": "https://www.prodbybitmap.com/"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.4.1",
@@ -25,6 +25,11 @@
     "vite": "^6.0.6"
   },
   "dependencies": {
+    "@types/electron": "^1.6.12",
+    "electron-store": "^10.0.0",
+    "i18next": "^24.2.0",
+    "i18next-fs-backend": "^2.6.0",
+    "i18next-http-backend": "^3.0.1",
     "vue": "^3.5.13"
   }
 }

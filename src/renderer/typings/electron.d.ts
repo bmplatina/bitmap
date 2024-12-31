@@ -8,5 +8,9 @@ export default interface ElectronApi {
 declare global {
   interface Window {
     electronAPI: ElectronApi,
+    i18n: {
+      t: (key: string) => Promise<string>;
+      changeLanguage: (lng: string) => Promise<void>;
+    };
   }
 }

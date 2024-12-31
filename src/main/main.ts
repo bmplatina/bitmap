@@ -1,5 +1,23 @@
-import {app, BrowserWindow, ipcMain, session} from 'electron';
-import {join} from 'path';
+import { app, BrowserWindow, ipcMain, session } from 'electron';
+import { join } from 'path';
+
+// i18n
+import i18n from 'i18next';
+import i18n_backend from 'i18next-fs-backend';
+// import Store from 'electron-store';
+import path from 'path';
+
+// const store = new Store<{ language: string }>();
+
+i18n.use(i18n_backend).init({
+  lng: /* store.get('language') || */ 'ko', // Saved language or default language
+  fallbackLng: 'en',
+  backend: {
+    loadPath: path.join(__dirname, '../locales/{{lng}}.json'),  // Locate Localization script
+  },
+}).then(() => {
+  console.log('i18n loaded');
+});
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
@@ -49,3 +67,13 @@ app.on('window-all-closed', function () {
 ipcMain.on('message', (event, message) => {
   console.log(message);
 })
+
+// i18n IPC 핸들러 등록
+ipcMain.handle('translate', (_, key: string) => {
+  return i18n.t(key); // 번역 결과 반환
+});
+
+ipcMain.handle('change-language', (_, lng: string) => {
+  i18n.changeLanguage(lng); // 언어 변경
+  // store.set('language', lng); // 언어 설정 저장
+});
