@@ -16,6 +16,7 @@
     "url": "https://www.prodbybitmap.com/"
   },
   "devDependencies": {
+    "@types/node": "^22.10.3",
     "@vitejs/plugin-vue": "^4.4.1",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.3",
@@ -26,10 +27,12 @@
   },
   "dependencies": {
     "@types/electron": "^1.6.12",
+    "axios": "^1.7.9",
     "electron-store": "^10.0.0",
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",
     "i18next-http-backend": "^3.0.1",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "vuetify": "^3.7.6"
   }
 }

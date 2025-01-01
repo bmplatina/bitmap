@@ -7,6 +7,10 @@ import i18n_backend from 'i18next-fs-backend';
 // import Store from 'electron-store';
 import path from 'path';
 
+// Platform
+const platformName: string = process.platform;
+const bIsDev: boolean = process.env.NODE_ENV === 'development' || !process.argv.includes("--noDevServer");
+
 // const store = new Store<{ language: string }>();
 
 i18n.use(i18n_backend).init({
@@ -21,12 +25,21 @@ i18n.use(i18n_backend).init({
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    title: "Bitmap",
+    width: 1600,
+    height: 900,
+    minWidth: 1280,
+    minHeight: 720,
+    autoHideMenuBar: true,
+    fullscreenable: true,
+    titleBarStyle: "hiddenInset",
+    frame: platformName === 'darwin',
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
-      nodeIntegration: false,
+      nodeIntegration: true,
       contextIsolation: true,
+      webviewTag: true,
+      devTools: bIsDev
     }
   });
 
