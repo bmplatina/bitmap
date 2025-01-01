@@ -8,6 +8,8 @@ import 'vuetify/styles';
 import { aliases, mdi } from "vuetify/iconsets/mdi";
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
+// Date
+import dayjs from "dayjs";
 
 const vuetify = createVuetify({
     icons: {
@@ -31,5 +33,15 @@ const vuetify = createVuetify({
 });
 
 const app = createApp(App);
+
+app.config.globalProperties.$filters = {
+    formatDate(value: string, locale: string) {
+        return locale === 'ko'
+            ? dayjs(value).format('YYYY/MM/DD')
+            : dayjs(value).format('MM/DD/YYYY');
+    },
+};
+
 app.use(vuetify);
+
 app.mount('#app');

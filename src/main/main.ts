@@ -1,33 +1,18 @@
-import { app, BrowserWindow, ipcMain, session } from 'electron';
+import { app, BrowserWindow, ipcMain, session, dialog } from 'electron';
 import { join } from 'path';
-
-// i18n
-import i18n from 'i18next';
-import i18n_backend from 'i18next-fs-backend';
-// import Store from 'electron-store';
-import path from 'path';
 
 // Platform
 const platformName: string = process.platform;
 const bIsDev: boolean = process.env.NODE_ENV === 'development' || !process.argv.includes("--noDevServer");
 
-// const store = new Store<{ language: string }>();
-
-i18n.use(i18n_backend).init({
-  lng: /* store.get('language') || */ 'ko', // Saved language or default language
-  fallbackLng: 'en',
-  backend: {
-    loadPath: path.join(__dirname, '../locales/{{lng}}.json'),  // Locate Localization script
-  },
-}).then(() => {
-  console.log('i18n loaded');
-});
+// Expose Window for Dialog Support
+let MAIN_WINDOW: BrowserWindow;
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
     title: "Bitmap",
-    width: 1600,
-    height: 900,
+    width: 1366,
+    height: 768,
     minWidth: 1280,
     minHeight: 720,
     autoHideMenuBar: true,
@@ -50,10 +35,12 @@ function createWindow () {
   else {
     mainWindow.loadFile(join(app.getAppPath(), 'renderer', 'index.html'));
   }
+
+  return mainWindow;
 }
 
 app.whenReady().then(() => {
-  createWindow();
+  MAIN_WINDOW = createWindow();
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -81,12 +68,13 @@ ipcMain.on('message', (event, message) => {
   console.log(message);
 })
 
-// i18n IPC 핸들러 등록
-ipcMain.handle('translate', (_, key: string) => {
-  return i18n.t(key); // 번역 결과 반환
+// 파일 경로 지정
+ipcMain.handle('show-dialog', async (event, options) => {
+  const result = await dialog.showOpenDialog(MAIN_WINDOW, options);
+  return result.filePaths[0]; // 사용자가 선택한 파일 경로
 });
 
-ipcMain.handle('change-language', (_, lng: string) => {
-  i18n.changeLanguage(lng); // 언어 변경
-  // store.set('language', lng); // 언어 설정 저장
+// 플랫폼 가져오기
+ipcMain.handle('get-platform', (event) => {
+  return process.platform;
 });

@@ -24,7 +24,7 @@
 //     },
 // ]
 
-export interface Game {
+interface Game {
     gameId: number;
     gameTitle: string;
     gamePlatformWindows: number;
@@ -46,3 +46,5 @@ export interface Game {
     gameHeadline: string;
     gameDescription: string;
 }
+
+export { Game };

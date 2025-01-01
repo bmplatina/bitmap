@@ -1,60 +1,68 @@
-<script defer lang="ts">
-import { defineComponent, ref, reactive, onMounted } from "vue";
+<script setup lang="ts">
+import {onMounted, reactive} from "vue";
 import axios from "axios";
-import { Game } from "../types/GameList"
+import {Game} from "../types/GameList"
+import GameEsdDetails from "./GameEsdDetails.vue";
+import {reset} from "chalk";
+import {pl} from "vuetify/locale";
 
-export default defineComponent({
-  name: "GameList",
-  setup() {
-    const games = ref<Game[]>([]);
+const state = reactive({
+  games: [] as Game[],
+  loading: true,
+  error: null as string | null,
+})
 
-    const fetchGames = async () => {
-      try {
-        const response = await axios.get<Game[]>(
-            "https://api.prodbybitmap.com/api/games"
-        );
-        games.value = response.data;
-      } catch (error) {
-        console.error("게임 데이터를 가져오는데 실패했습니다:", error);
-      }
-    };
+const fetchGames = async () => {
+  try {
+    const response = await axios.get<Game[]>('https://api.prodbybitmap.com/api/games')
+    state.games = response.data
+    state.loading = false
+  } catch (error) {
+    state.error = '게임 데이터를 가져오는 중 오류가 발생했습니다.'
+    state.loading = false
+    console.error('Error fetching games:', error)
+  }
+}
 
-    onMounted(() => {
-      fetchGames();
-    });
+let CurrentPlatform: string;
 
-    return { games };
-  },
+async function GetPlatform() {
+  try {
+    CurrentPlatform = await (window as any).electronAPI.getPlatform();
+  }
+  catch (error) {
+    console.error(error);
+  }
+}
+
+onMounted(() => {
+  fetchGames();
+  GetPlatform();
 });
 </script>
 
 <template>
-  <v-app>
-<!--    <h1>게임 리스트</h1>-->
-<!--    <ul>-->
-<!--      <li v-for="game in games" :key="game.gameId">-->
-<!--        <img :src="game.gameImageURL" :alt="game.gameTitle" width="100" />-->
-<!--        <h3>{{ game.gameTitle }}</h3>-->
-<!--        <p>{{ game.gameGenre }}</p>-->
-<!--      </li>-->
-<!--    </ul>-->
-    <v-card max-width="400" v-for="game in games" :key="game.gameId">
-      <v-img :src="game.gameImageURL" :alt="game.gameTitle"></v-img>
-      <v-card-text>
-        <div>
-          <h2 class="title primary--text mb-2">{{game.gameTitle}}</h2>
-          <p class="mb-0">Dev: {{game.gameDeveloper}}</p>
-          <p class="mb-0">Genre: {{game.gameGenre}}</p>
+  <v-container fluid>
+    <v-row>
+      <!-- 게임 아이템을 넣을 공간 -->
+      <v-col v-for="game in state.games" :key="game.gameId" :cols="3">
+        <div v-if="state.loading">
+          <v-skeleton-loader
+              max-width="400"
+              :height="'566px'"
+              type="image, article"
+          ></v-skeleton-loader>
         </div>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-btn color="red white--text">확인</v-btn>
-        <v-btn outlined color="red">취소</v-btn>
-        <v-btn color="#9C27B0" dark>취소</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-app>
+        <div v-else-if="state.error">
+          {{ state.error }}
+        </div>
+        <div v-else>
+          <!-- 정상 데이터를 표시 -->
+          <GameEsdDetails :gameObject="game" :platform="CurrentPlatform" />
+        </div>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <style scoped>

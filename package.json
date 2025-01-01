@@ -28,11 +28,13 @@
   "dependencies": {
     "@types/electron": "^1.6.12",
     "axios": "^1.7.9",
+    "dayjs": "^1.11.13",
     "electron-store": "^10.0.0",
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",
     "i18next-http-backend": "^3.0.1",
     "vue": "^3.5.13",
+    "vue-i18n": "^11.0.1",
     "vuetify": "^3.7.6"
   }
 }
