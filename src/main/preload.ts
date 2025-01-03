@@ -22,5 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   extractZip: (filePath: string) => ipcRenderer.invoke('extract-zip', filePath),
 
   // Get extraction progress
-  onExtractProgress: (callback: (progress: number) => void) => ipcRenderer.on('extract-progress', (_, progress) => callback(progress))
+  onExtractProgress: (callback: (progress: number) => void) => ipcRenderer.on('extract-progress', (_, progress) => callback(progress)),
+
+  // Open file
+  runCommand: (command: string) => ipcRenderer.invoke('run-command', command),
 });

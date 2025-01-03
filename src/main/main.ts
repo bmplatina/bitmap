@@ -2,6 +2,8 @@ import { app, BrowserWindow, ipcMain, session, dialog } from 'electron';
 import { join, dirname } from 'path';
 import * as fs from 'fs';
 import axios from 'axios';
+import unzipper from 'unzipper';
+import { exec } from "node:child_process";
 
 // Platform
 const platformName: string = process.platform;
@@ -83,6 +85,12 @@ ipcMain.handle('get-platform', (event) => {
 
 // download
 ipcMain.handle('download-file', async (event, { url, savePath }) => {
+  // 디렉터리 없을 시 생성
+  const directory = dirname(savePath);
+  if(!fs.existsSync(directory)) {
+    fs.mkdirSync(directory, { recursive: true });
+  }
+
   const writer = fs.createWriteStream(savePath);
 
   try {
@@ -109,19 +117,57 @@ ipcMain.handle('download-file', async (event, { url, savePath }) => {
 });
 
 ipcMain.handle('extract-zip', async (event, zipPath) => {
-  // const extractPath = dirname(zipPath);
-  //
-  // try {
-  //   const zip = new AdmZip(zipPath);
-  //   zip.extractAllToAsync(extractPath, true, (err) => {
-  //     if (err) {
-  //       throw err;
-  //     }
-  //     event.sender.send('extract-progress', 100); // 압축 해제 완료
-  //   });
-  //   return extractPath;
-  // } catch (error) {
-  //   console.error('압축 해제 실패:', error);
-  //   throw error;
-  // }
+  const extractPath = dirname(zipPath);
+
+  try {
+    const zip = fs.createReadStream(zipPath);
+    const directory = await unzipper.Open.file(zipPath);
+    const totalFiles = directory.files.length;
+    let extractedFiles = 0;
+
+    // 파일을 하나씩 해제하며 진행률 계산
+    await new Promise<void>((resolve, reject) => {
+      zip
+          .pipe(unzipper.Extract({ path: extractPath }))
+          .on('entry', (entry) => {
+            extractedFiles++;
+            const progress = Math.round((extractedFiles / totalFiles) * 100);
+            event.sender.send('extract-progress', progress); // 진행률 전송
+            entry.autodrain(); // 필요하지 않은 경우 스트림 자동 소멸
+          })
+          .on('close', resolve) // 압축 해제 완료
+          .on('error', reject); // 에러 발생
+    });
+
+    fs.rmSync(zipPath, { recursive: true });
+
+    if(platformName === 'darwin') {
+      new Promise<string>((resolve, reject) => {
+        exec(`chmod -R 755 "${extractPath}"`, (error, stdout, stderr) => {
+          if (error) {
+            reject(stderr || error.message);
+          }
+          resolve(stdout);
+        });
+      })
+    }
+
+    return extractPath;
+  } catch (error) {
+    console.error('압축 해제 실패:', error);
+    throw error;
+  }
+});
+
+// Open File
+ipcMain.handle('run-command', (event, command) => {
+  return new Promise<string>((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(stderr || error.message);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
 });
