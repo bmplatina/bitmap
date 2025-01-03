@@ -1,21 +1,81 @@
-<script setup lang="ts" nonce="randomNonceValue">
-import {ref} from 'vue'
-import {Game} from "../types/GameList"
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Game } from "../types/GameList";
 
 const props = defineProps<{
   gameObject: Game,
   platform: string,
 }>();
 
-// Modal State
+/*
+ * External links
+ */
+function openExternal(event: MouseEvent) {
+  event.preventDefault(); // 기본 동작 방지
+
+  const target = event.target as HTMLAnchorElement; // 클릭된 요소를 Anchor로 타입 단언
+  const url = target.href;
+
+  window.electronAPI.openExternal(url); // 외부 브라우저에서 열기
+}
+
+/*
+ * Modal state
+ */
 let bIsDetailModalOpened = ref(false);
 let bIsInstallModalOpened = ref(false);
 let bIsUninstallModalOpened = ref(false);
-let bIsInstalled = ref(false);
 
-// Installation Properties
+/*
+ * Download & Installation
+ */
+let InstallState: number = 0; // Get Install state from electron-store
+const enum EInstallState {
+  NotInstalled,
+  Downloading,
+  Extracting,
+  Installed
+}
+
+let downloadProgress = ref(0);
+let extractProgress = ref(0);
 let InstallationPath = ref(`/Users/Shared/Bitmap Production/${props.gameObject.gameBinaryName}`);
 
+const downloadAndInstall = async (url: string | null, savePath: string) => {
+  console.log(`URL: ${url}, SavePath: ${savePath}`);
+  const urlLocal: string | null = `${url}/${props.gameObject.gameBinaryName}`;
+
+  try {
+    // 다운로드 진행률 수신
+    window.electronAPI.onDownloadProgress((progress) => {
+      InstallState = EInstallState.Downloading;
+      downloadProgress.value = progress;
+    });
+
+    // 다운로드 요청
+    const filePath = await window.electronAPI.downloadFile(urlLocal, savePath);
+    console.log('다운로드 완료:', filePath);
+
+    // 압축 해제 진행률 수신
+    window.electronAPI.onExtractProgress((progress) => {
+      InstallState = EInstallState.Extracting;
+      extractProgress.value = progress;
+    });
+
+    // 압축 해제 요청
+    const extractedPath = await window.electronAPI.extractZip(filePath);
+    console.log('압축 해제 완료:', extractedPath);
+
+    InstallState = EInstallState.Installed; // 작업 완료
+  }
+  catch (error) {
+    console.error('오류 발생:', error);
+  }
+};
+
+/*
+ * Select installation directory
+ */
 async function selectDirectory() {
   const options = {
     title: '파일 경로 선택',
@@ -32,7 +92,9 @@ async function selectDirectory() {
   }
 }
 
-// Platform Compatibility
+/*
+ * Platform Compatibility
+ */
 function GetIsPlatformCompatible(): boolean {
   switch (props.platform) {
     case 'win32':
@@ -44,6 +106,11 @@ function GetIsPlatformCompatible(): boolean {
 }
 
 const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
+
+/*
+ * Get Download URL
+ */
+const DownloadUrl: string | null = props.platform === 'win32' ? props.gameObject.gameDownloadWinURL : props.gameObject.gameDownloadMacURL;
 </script>
 
 <template>
@@ -58,17 +125,23 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
     ></v-img>
     <v-card-text>
       <div style="text-align: left;">
-        <v-img
-            src="../assets/platformWindows11.png"
-            v-if="props.gameObject.gamePlatformWindows == 1"
-            :width="20"
-        ></v-img>
-        <v-img
-            src="../assets/platformMac.png"
-            v-if="props.gameObject.gamePlatformMac == 1"
-            :width="20"
-        ></v-img>
         <h2 class="title primary--text mb-2" @click="bIsDetailModalOpened = true">{{ gameObject.gameTitle }}</h2>
+        <div class="d-flex align-center mb-2">
+          <v-img
+              src="../assets/platformWindows11.png"
+              v-if="props.gameObject.gamePlatformWindows == 1"
+              :max-width="20"
+              :max-height="20"
+              style="margin-right: 8px"
+          ></v-img>
+          <v-img
+              src="../assets/platformMac.png"
+              v-if="props.gameObject.gamePlatformMac == 1"
+              :max-width="20"
+              :max-height="20"
+              style="margin-right: 8px"
+          ></v-img>
+        </div>
         <p class="mb-0">Dev: {{ gameObject.gameDeveloper }}</p>
         <p class="mb-0">Genre: {{ gameObject.gameGenre }}</p>
         <p class="mb-0">Released: {{ $filters.formatDate(gameObject.gameReleasedDate, 'ko') }}</p>
@@ -80,19 +153,19 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
         variant="tonal"
         outlined color="primary"
         @click="bIsInstallModalOpened = true"
-        v-if="!bIsInstalled"
+        v-if="InstallState === EInstallState.NotInstalled"
         :disabled="!bIsPlatformCompatible"
       >설치</v-btn>
       <v-btn
         variant="tonal"
         outlined color="primary"
         @click="bIsInstallModalOpened = true"
-        v-if="bIsInstalled"
+        v-if="InstallState === EInstallState.Installed"
       >실행</v-btn>
       <v-btn
         color="red"
         @click="bIsUninstallModalOpened = true"
-        v-if="bIsInstalled"
+        v-if="InstallState === EInstallState.Installed"
       >제거</v-btn>
     </v-card-actions>
   </v-card>
@@ -106,30 +179,23 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
       <v-divider />
 
       <v-row style="height: 80%;" class="d-flex">
-        <v-col cols="3" class="align-items-center">
-          <div style="text-align: center;">
+        <v-col cols="3" class="d-flex flex-column align-items-center">
+          <div>
             <v-img
-                class="rounded-xl"
+                class="rounded-xl mx-auto"
                 :src="gameObject.gameImageURL"
                 lazy-src="../assets/unknownImage.png"
                 :alt="gameObject.gameTitle"
-                :width="160"
-                :height="226.2"
+                :max-width="240"
+                style="margin-top: calc(4% + 16px)"
             ></v-img>
-            <!-- h2와 p를 가로로 나란히 배치 -->
-            <div class="d-flex align-items-center">
-              <h2 class="display-1 my-5">{{ gameObject.gameTitle }}</h2>
-              <p v-if="gameObject.isEarlyAccess" class="ml-3">얼리 액세스</p>
+            <div class="d-flex justify-center align-center mt-5 w-100">
+              <h2 class="text-h5 mr-2">{{ gameObject.gameTitle }}</h2>
+              <p v-if="gameObject.isEarlyAccess" class="mb-0">얼리 액세스</p>
             </div>
-            <p>발매일: {{ $filters.formatDate(gameObject.gameReleasedDate, 'ko') }}</p>
-            <p>장르: {{ gameObject.gameGenre }}</p>
-            <p>개발: {{ gameObject.gameDeveloper }}</p>
-            <p>배금: {{ gameObject.gamePublisher }}</p>
-            <a :href="gameObject.gameWebsite">게임 웹사이트 보기</a>
           </div>
         </v-col>
 
-        <!-- v-divider 삽입 -->
         <v-divider vertical style="margin-top: 1%; margin-bottom: 1%"></v-divider>
 
         <v-col cols="9" style="display: flex; flex-direction: column; height: 100%;" class="align-center">
@@ -142,8 +208,22 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
             >
               <webview
                   :src="'https://www.youtube.com/embed/' + gameObject.gameVideoURL"
-                  style="width: 384px; height: 216px; margin-top: 4%"
+                  style="width: 512px; height: 288px; margin-top: 4%"
               ></webview>
+            </v-card>
+            <v-card
+                class="mt-4 pa-3 rounded-xl"
+                :title="`${gameObject.gameTitle} 정보`"
+                variant="tonal"
+                style="white-space: pre-line;"
+            >
+              <v-card-text>
+                <p>발매일: {{ $filters.formatDate(gameObject.gameReleasedDate, 'ko') }}</p>
+                <p>장르: {{ gameObject.gameGenre }}</p>
+                <p>개발: {{ gameObject.gameDeveloper }}</p>
+                <p>배급: {{ gameObject.gamePublisher }}</p>
+                <a :href="gameObject.gameWebsite" @click="openExternal">게임 웹사이트 보기</a>
+              </v-card-text>
             </v-card>
             <v-card
                 class="mt-4 pa-3 rounded-xl"
@@ -154,7 +234,7 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
             ></v-card>
             <v-card
                 class="mt-4 pa-3 rounded-xl"
-                :title="gameObject.gameHeadline"
+                title="시스템 요구 사양"
                 :text="gameObject.gameDescription"
                 variant="tonal"
                 style="white-space: pre-line;"
@@ -169,7 +249,7 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
             color="primary"
             flat
             @click="bIsInstallModalOpened = true"
-            v-if="!bIsInstalled"
+            v-if="InstallState === EInstallState.NotInstalled"
             :disabled="!bIsPlatformCompatible"
         >{{ bIsPlatformCompatible ? "설치" : "지원하지 않는 플랫폼" }}</v-btn>
         <v-btn
@@ -177,13 +257,13 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
             color="primary"
             flat
             @click=""
-            v-if="bIsInstalled"
+            v-if="InstallState === EInstallState.Installed"
         >실행</v-btn>
         <v-btn
             color="red"
             flat
             @click="bIsDetailModalOpened = false; bIsUninstallModalOpened = true"
-            v-if="bIsInstalled"
+            v-if="InstallState === EInstallState.Installed"
         >제거</v-btn>
       </v-card-actions>
     </v-card>
@@ -199,7 +279,7 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
       <div style="margin-top: 4%; margin-bottom: 1%; margin-left: 16%; margin-right: 16%;">
         <div style="text-align: center;">
           <v-img
-              class="rounded-xl"
+              class="rounded-xl mx-auto"
               :src="gameObject.gameImageURL"
               lazy-src="../assets/unknownImage.png"
               :alt="gameObject.gameTitle"
@@ -220,6 +300,18 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
             readonly
             dense
         ></v-text-field>
+        <v-card-text
+            v-if="InstallState === EInstallState.Downloading || InstallState === EInstallState.Extracting"
+        >
+          {{ InstallState === EInstallState.Downloading ? `다운로드 중` : `압축 해제 중`}}
+        </v-card-text>
+        <v-progress-linear
+            color="light-blue"
+            height="10"
+            :model-value="InstallState === EInstallState.Downloading ? downloadProgress : extractProgress"
+            v-if="InstallState === EInstallState.Downloading || InstallState === EInstallState.Extracting"
+            striped
+        ></v-progress-linear>
 <!--        <h2 class="display-1 my-5">디스크 공간</h2>-->
       </div>
 
@@ -231,7 +323,7 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
         <v-btn
           color="primary"
           flat
-          @click=""
+          @click="downloadAndInstall(DownloadUrl, InstallationPath)"
           :disabled="!bIsPlatformCompatible"
         >설치</v-btn>
         <v-btn

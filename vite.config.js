@@ -18,6 +18,15 @@ const config = defineConfig({
         emptyOutDir: true,
     },
     plugins: [vuePlugin()],
+    // path module fix
+    resolve: {
+        alias: {
+            path: 'path-browserify',
+        },
+    },
+    define: {
+        'process.env': {}
+    }
 });
 
 module.exports = config;

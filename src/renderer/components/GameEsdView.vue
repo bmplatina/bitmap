@@ -6,6 +6,9 @@ import GameEsdDetails from "./GameEsdDetails.vue";
 import {reset} from "chalk";
 import {pl} from "vuetify/locale";
 
+/*
+ * Get API from server
+ */
 const state = reactive({
   games: [] as Game[],
   loading: true,
@@ -24,6 +27,9 @@ const fetchGames = async () => {
   }
 }
 
+/*
+ * Check platform
+ */
 let CurrentPlatform: string;
 
 async function GetPlatform() {
