@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Game } from "../types/GameList";
+import {onMounted, ref} from 'vue'
+import {Game} from "../types/GameList";
+import {EInstallState, GameInstallInfo} from '../types/GameInstallInfo';
 
 
 const props = defineProps<{
@@ -23,12 +24,12 @@ function openExternal(event: MouseEvent) {
 /*
  * Modal state
  */
-const enum EModalState {
-  NotOpened,
-  DetailModalOpened,
-  InstallModalOpened,
-  UninstallModalOpened,
-}
+// const enum EModalState {
+//   NotOpened,
+//   DetailModalOpened,
+//   InstallModalOpened,
+//   UninstallModalOpened,
+// }
 
 let bIsDetailModalOpened = ref(false);
 let bIsInstallModalOpened = ref(false);
@@ -37,53 +38,98 @@ let bIsUninstallModalOpened = ref(false);
 /*
  * Download & Installation
  */
-
-const enum EInstallState {
-  NotInstalled,
-  Downloading,
-  Extracting,
-  Installed,
-  InstallError
-}
-
-let InstallState: EInstallState = EInstallState.NotInstalled; // Get Install state from electron-store
+let InstallInfo: GameInstallInfo = {
+  ...props.gameObject,
+  gameInstallationPath: '',
+  gameInstallState: EInstallState.NotInstalled,
+  gameInstalledVersion: '',
+};
 
 let downloadProgress = ref(0);
 let extractProgress = ref(0);
 let InstallationPath = ref(`/Users/Shared/Bitmap Production/${props.gameObject.gameBinaryName}`);
 
-const downloadAndInstall = async (url: string | null, savePath: string) => {
+//
+async function pullInstallState() {
+  try {
+    const getResultLocal = await window.electronAPI.getGameInstallInfoByIndex(props.gameObject.gameId);
+    console.log(getResultLocal);
+
+    if(getResultLocal) {
+      // If getting from store succeed, allocate it to property
+      InstallInfo = getResultLocal;
+    }
+    else {
+      // If failed, initialize property
+      InstallInfo = {
+        ...props.gameObject,
+        gameInstallationPath: '',
+        gameInstallState: EInstallState.NotInstalled,
+        gameInstalledVersion: '',
+      };
+    }
+
+    // Check is installation path valid
+    if(await window.electronAPI.checkPathValid(InstallInfo.gameInstallationPath)) {
+      InstallInfo.gameInstallState = EInstallState.Installed;
+    }
+    else {
+      InstallInfo.gameInstallState = EInstallState.NotInstalled;
+    }
+
+    // Push install state
+    pushInstallState();
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function pushInstallState() {
+  try {
+    const getResultLocal = await window.electronAPI.getGameInstallInfoByIndex(props.gameObject.gameId);
+    if(getResultLocal) {
+      await window.electronAPI.updateGameInstallInfo(props.gameObject.gameId, InstallInfo);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function downloadAndInstall(url: string | null, savePath: string) {
   const savePathLocal: string | null = `${savePath}/${props.gameObject.gameBinaryName}`;
   console.log(`URL: ${url}, SavePath: ${savePathLocal}`);
 
   try {
     // 다운로드 진행률 수신
     window.electronAPI.onDownloadProgress((progress) => {
-      InstallState = EInstallState.Downloading;
+      InstallInfo.gameInstallState = EInstallState.Downloading;
       downloadProgress.value = progress;
-      console.log(`다운로드 중: ${downloadProgress.value}, EInstallState.Downloading: ${InstallState === EInstallState.Downloading}`);
+      console.log(`다운로드 중: ${downloadProgress.value}, EInstallState.Downloading: ${InstallInfo.gameInstallState === EInstallState.Downloading}`);
     });
 
     // 다운로드 요청
     const filePath = await window.electronAPI.downloadFile(url, savePathLocal);
-    console.log(`다운로드 완료: ${filePath}, EInstallState.Downloading: ${InstallState === EInstallState.Downloading}`);
+    console.log(`다운로드 완료: ${filePath}, EInstallState.Downloading: ${InstallInfo.gameInstallState === EInstallState.Downloading}`);
 
     // 압축 해제 진행률 수신
     window.electronAPI.onExtractProgress((progress) => {
-      InstallState = EInstallState.Extracting;
+      InstallInfo.gameInstallState = EInstallState.Extracting;
       extractProgress.value = progress;
-      console.log(`압축 해제 중: ${downloadProgress.value}, EInstallState.Extracting: ${InstallState === EInstallState.Extracting}`);
+      console.log(`압축 해제 중: ${downloadProgress.value}, EInstallState.Extracting: ${InstallInfo.gameInstallState === EInstallState.Extracting}`);
     });
 
     // 압축 해제 요청
     const extractedPath = await window.electronAPI.extractZip(filePath);
-    console.log(`압축 해제 완료: ${extractedPath}, EInstallState.Extracting: ${InstallState === EInstallState.Extracting}`);
+    console.log(`압축 해제 완료: ${extractedPath}, EInstallState.Extracting: ${InstallInfo.gameInstallState === EInstallState.Extracting}`);
 
-    InstallState = EInstallState.Installed; // 작업 완료
-    console.log(`설치 완료: EInstallState.Installed: ${InstallState === EInstallState.Installed}`);
+    InstallInfo.gameInstallState = EInstallState.Installed; // 작업 완료
+    InstallInfo.gameInstallationPath = InstallationPath.value;
+    // InstallInfo.gameInstalledVersion = props.gameObject.gameLatestVersion;
+    pushInstallState();
+    console.log(`설치 완료: EInstallState.Installed: ${InstallInfo.gameInstallState === EInstallState.Installed}`);
   }
   catch (error) {
-    InstallState = EInstallState.InstallError;
+    InstallInfo.gameInstallState = EInstallState.InstallError;
     console.error('오류 발생:', error);
   }
 };
@@ -128,19 +174,19 @@ const bIsPlatformCompatible: boolean = GetIsPlatformCompatible();
 const DownloadUrl: string | null = props.platform === 'win32' ? props.gameObject.gameDownloadWinURL : props.gameObject.gameDownloadMacURL;
 
 /*
- * Open Application
+ * Manage Application
  */
 async function openApp() {
   let openCommand: string = "";
 
   if (props.platform === "win32") {
-    if (InstallationPath.value.charAt(0) === "C") {
-      openCommand = `${InstallationPath.value}\\${props.gameObject.gameBinaryName}.exe`;
+    if (InstallInfo.gameInstallationPath.charAt(0) === "C") {
+      openCommand = `${InstallInfo.gameInstallationPath}\\${props.gameObject.gameBinaryName}.exe`;
     } else {
-      openCommand = `${InstallationPath.value.charAt(0)}: && ${InstallationPath.value}\\${props.gameObject.gameBinaryName}.exe`;
+      openCommand = `${InstallInfo.gameInstallationPath.charAt(0)}: && ${InstallInfo.gameInstallationPath}\\${props.gameObject.gameBinaryName}.exe`;
     }
   } else if (props.platform === "darwin") {
-    openCommand = `open "${InstallationPath.value}/${props.gameObject.gameBinaryName}.app"`;
+    openCommand = `open "${InstallInfo.gameInstallationPath}/${props.gameObject.gameBinaryName}.app"`;
   } else {
     console.error("지원하지 않는 플랫폼입니다.");
     return;
@@ -153,6 +199,27 @@ async function openApp() {
     console.error("명령 실행 중 오류:", error as string);
   }
 }
+
+async function removeApp() {
+  let binaryPath: string = "";
+  if (props.platform === "win32") {
+    binaryPath = `${InstallInfo.gameInstallationPath}\\${props.gameObject.gameBinaryName}.exe`;
+  } else if (props.platform === "darwin") {
+    binaryPath = `${InstallInfo.gameInstallationPath}/${props.gameObject.gameBinaryName}.app`;
+  } else {
+    console.error("지원하지 않는 플랫폼입니다.");
+    return;
+  }
+
+  if(await window.electronAPI.removeFile(binaryPath)) {
+    InstallInfo.gameInstallState = EInstallState.NotInstalled;
+    pushInstallState();
+  }
+}
+
+onMounted(() => {
+  pullInstallState();
+})
 </script>
 
 <template>
@@ -195,19 +262,19 @@ async function openApp() {
         variant="tonal"
         outlined color="primary"
         @click="bIsInstallModalOpened = true"
-        v-if="InstallState === EInstallState.NotInstalled"
+        v-if="InstallInfo.gameInstallState === EInstallState.NotInstalled"
         :disabled="!bIsPlatformCompatible"
       >설치</v-btn>
       <v-btn
         variant="tonal"
         outlined color="primary"
         @click="openApp"
-        v-if="InstallState === EInstallState.Installed"
+        v-if="InstallInfo.gameInstallState === EInstallState.Installed"
       >실행</v-btn>
       <v-btn
         color="red"
         @click="bIsUninstallModalOpened = true"
-        v-if="InstallState === EInstallState.Installed"
+        v-if="InstallInfo.gameInstallState === EInstallState.Installed"
       >제거</v-btn>
     </v-card-actions>
   </v-card>
@@ -277,7 +344,7 @@ async function openApp() {
             <v-card
                 class="mt-4 pa-3 rounded-xl"
                 title="시스템 요구 사양"
-                :text="gameObject.gameDescription"
+                :text="platform === 'darwin' ? 'Mac' : 'Windows'"
                 variant="tonal"
                 style="white-space: pre-line;"
             ></v-card>
@@ -291,7 +358,7 @@ async function openApp() {
             color="primary"
             flat
             @click="bIsInstallModalOpened = true"
-            v-if="InstallState === EInstallState.NotInstalled"
+            v-if="InstallInfo.gameInstallState === EInstallState.NotInstalled"
             :disabled="!bIsPlatformCompatible"
         >{{ bIsPlatformCompatible ? "설치" : "지원하지 않는 플랫폼" }}</v-btn>
         <v-btn
@@ -299,13 +366,13 @@ async function openApp() {
             color="primary"
             flat
             @click="openApp"
-            v-if="InstallState === EInstallState.Installed"
+            v-if="InstallInfo.gameInstallState === EInstallState.Installed"
         >실행</v-btn>
         <v-btn
             color="red"
             flat
-            @click="bIsDetailModalOpened = false; bIsUninstallModalOpened = true"
-            v-if="InstallState === EInstallState.Installed"
+            @click="bIsDetailModalOpened = false; bIsUninstallModalOpened = true; "
+            v-if="InstallInfo.gameInstallState === EInstallState.Installed"
         >제거</v-btn>
       </v-card-actions>
     </v-card>
@@ -343,15 +410,15 @@ async function openApp() {
             dense
         ></v-text-field>
         <v-card-text
-            v-if="InstallState === EInstallState.Downloading || InstallState === EInstallState.Extracting"
+            v-if="InstallInfo.gameInstallState === EInstallState.Downloading || InstallInfo.gameInstallState === EInstallState.Extracting"
         >
-          {{ InstallState === EInstallState.Downloading ? `다운로드 중: ${Math.round(downloadProgress)}%` : `압축 해제 중: ${extractProgress}%` }}
+          {{ InstallInfo.gameInstallState === EInstallState.Downloading ? `다운로드 중: ${Math.round(downloadProgress)}%` : `압축 해제 중: ${extractProgress}%` }}
         </v-card-text>
         <v-progress-linear
             color="light-blue"
             height="10"
-            :model-value="InstallState === EInstallState.Downloading ? downloadProgress : extractProgress"
-            v-if="InstallState === EInstallState.Downloading || InstallState === EInstallState.Extracting"
+            :model-value="InstallInfo.gameInstallState === EInstallState.Downloading ? downloadProgress : extractProgress"
+            v-if="InstallInfo.gameInstallState === EInstallState.Downloading || InstallInfo.gameInstallState === EInstallState.Extracting"
             striped
         ></v-progress-linear>
 <!--        <h2 class="display-1 my-5">디스크 공간</h2>-->

@@ -1,9 +1,14 @@
 import { app, BrowserWindow, ipcMain, session, dialog } from 'electron';
-import { join, dirname } from 'path';
+import Datastore from 'nedb';
+import { join, dirname, extname } from 'path';
 import * as fs from 'fs';
 import axios from 'axios';
 import unzipper from 'unzipper';
 import { exec } from "node:child_process";
+import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
+
+// Parameter saver
+const gameInstallInfoDb = new Datastore({ filename: 'gameInstallInfo.db', autoload: true });
 
 // Platform
 const platformName: string = process.platform;
@@ -39,6 +44,13 @@ function createWindow () {
   else {
     mainWindow.loadFile(join(app.getAppPath(), 'renderer', 'index.html'));
   }
+
+  // mainWindow.webContents.addListener('before-input-event', (event, input) => {
+  //   // Ctrl + R 또는 F5를 눌렀을 때
+  //   if ((input.key === 'r' && input.control) || input.key === 'F5') {
+  //     event.preventDefault(); // 기본 동작 막기
+  //   }
+  // });
 
   return mainWindow;
 }
@@ -170,4 +182,92 @@ ipcMain.handle('run-command', (event, command) => {
       }
     });
   });
+});
+
+// Delete file
+ipcMain.handle('remove-file', async (event, targetPath: string): Promise<boolean> => {
+  // 디렉터리 없을 시 생성
+  const directory = dirname(targetPath);
+  if(fs.existsSync(directory)) {
+    fs.rmSync(directory, { recursive: true });
+    if(!fs.existsSync(directory)) {
+      return true;
+    }
+  }
+  return false;
+});
+
+// Save data
+// 데이터 설정
+
+ipcMain.handle('game-install-info-insert', (_, value: GameInstallInfo): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    gameInstallInfoDb.insert(value, (err, newDoc) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(newDoc);
+      }
+    })
+  })
+});
+
+// 데이터 가져오기
+ipcMain.handle('game-install-info-get-by-index', (_, gameIdIndex: number): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    gameInstallInfoDb.find({ gameId: gameIdIndex }, (err, docs) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(docs);
+      }
+    })
+  })
+});
+
+// 데이터 삭제
+ipcMain.handle('game-install-info-delete', (_, gameIdIndex: number): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    gameInstallInfoDb.remove({ gameId: gameIdIndex }, {}, function (err, numRemoved) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(numRemoved);
+      }
+    });
+  })
+});
+
+// 데이터 업데이트
+ipcMain.handle('game-install-info-update', (event, gameIdIndex: number, gameInstallInfo: GameInstallInfo) => {
+  // 조건에 맞는 데이터 업데이트
+  return new Promise((resolve, reject) => {
+    gameInstallInfoDb.update({ gameId: gameIdIndex }, { $set: gameInstallInfo }, {}, function (err, numReplaced) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(numReplaced);
+      }
+    });
+  })
+})
+
+// Store Init
+ipcMain.handle('check-executable-or-app', async (_, dirPath: string): Promise<boolean> => {
+  try {
+    // 디렉터리 내용 읽기
+    const files = await fs.promises.readdir(dirPath, { withFileTypes: true });
+
+    // .exe 파일 또는 .app 디렉터리가 있는지 검사
+    return files.some((file) => {
+      const ext = extname(file.name).toLowerCase();
+      return (
+          (file.isFile() && ext === '.exe') || // .exe 파일
+          (file.isDirectory() && file.name.endsWith('.app')) // .app 디렉터리
+      );
+    });
+  } catch (error) {
+    console.error('오류 발생:', error);
+    return false; // 오류 발생 시 false 반환
+  }
 });

@@ -1,4 +1,4 @@
-import {ipcRenderer} from "electron";
+// import {GameInstallInfo} from "../types/GameInstallInfo";
 
 /**
  * Should match main/preload.ts for typescript support in renderer
@@ -18,6 +18,15 @@ export default interface ElectronApi {
   onExtractProgress: (callback: (progress: number) => void) => number,
 
   runCommand: (command: string) => Promise<string>,
+
+  removeFile: (targetPath: string) => Promise<boolean>,
+
+  setGameInstallInfo: (value: GameInstallInfo) => Promise<any>,
+  getGameInstallInfoByIndex: (gameIdIndex: number) => Promise<any>,
+  deleteGameInstallInfo: (gameIdIndex: number) => Promise<any>,
+  updateGameInstallInfo: (gameIdIndex: number, gameInstallInfo: GameInstallInfo) => Promise<any>,
+
+  checkPathValid: (dirPath: string) => Promise<boolean>,
 }
 
 declare global {

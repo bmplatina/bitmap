@@ -1,4 +1,5 @@
-import { contextBridge, ipcRenderer, shell } from 'electron';
+import {contextBridge, ipcRenderer, shell} from 'electron';
+import {GameInstallInfo} from "../renderer/types/GameInstallInfo";
 
 contextBridge.exposeInMainWorld('electronAPI', {
   sendMessage: (message: string) => ipcRenderer.send('message', message),
@@ -26,4 +27,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Open file
   runCommand: (command: string) => ipcRenderer.invoke('run-command', command),
+
+  // Remove file
+  removeFile: (targetPath: string) => ipcRenderer.invoke('remove-file', targetPath),
+
+  // electron-store:insert
+  setGameInstallInfo: (value: GameInstallInfo) => ipcRenderer.invoke('game-install-info-insert', value),
+
+  // electron-store:get
+  getGameInstallInfoByIndex: (gameIdIndex: number) => ipcRenderer.invoke('game-install-info-get-by-index', gameIdIndex),
+
+  // electron-store:delete
+  deleteGameInstallInfo: (gameIdIndex: number) => ipcRenderer.invoke('game-install-info-delete', gameIdIndex),
+
+  // electron-store:update
+  updateGameInstallInfo: (gameIdIndex: number, gameInstallInfo: GameInstallInfo) => ipcRenderer.invoke('game-install-info-update', gameIdIndex, gameInstallInfo),
+
+  // Check is game path valid
+  checkPathValid: (dirPath: string) => ipcRenderer.invoke('check-executable-or-app', dirPath),
 });
