@@ -13,17 +13,17 @@ const state = reactive({
   games: [] as Game[],
   loading: true,
   error: null as string | null,
-})
+});
 
-const fetchGames = async () => {
+async function fetchGames() {
   try {
     const response = await axios.get<Game[]>('https://api.prodbybitmap.com/api/games')
-    state.games = response.data
-    state.loading = false
+    state.games = response.data;
+    state.loading = false;
   } catch (error) {
-    state.error = '게임 데이터를 가져오는 중 오류가 발생했습니다.'
-    state.loading = false
-    console.error('Error fetching games:', error)
+    state.error = '게임 데이터를 가져오는 중 오류가 발생했습니다.';
+    state.loading = false;
+    console.error('Error fetching games:', error);
   }
 }
 
@@ -34,7 +34,7 @@ let CurrentPlatform: string;
 
 async function GetPlatform() {
   try {
-    CurrentPlatform = await (window as any).electronAPI.getPlatform();
+    CurrentPlatform = await window.electronAPI.getPlatform();
   }
   catch (error) {
     console.error(error);

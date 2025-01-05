@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue'
 import {Game} from "../types/GameList";
-import {EInstallState, GameInstallInfo} from '../types/GameInstallInfo';
+import { EInstallState, GameInstallInfo } from '../types/GameInstallInfo';
 
 
 const props = defineProps<{
@@ -47,7 +47,9 @@ let InstallInfo: GameInstallInfo = {
 
 let downloadProgress = ref(0);
 let extractProgress = ref(0);
-let InstallationPath = ref(`/Users/Shared/Bitmap Production/${props.gameObject.gameBinaryName}`);
+let InstallationPath = ref(props.platform === 'darwin'
+    ? `/Users/Shared/Bitmap Production/${props.gameObject.gameBinaryName}`
+    : `C:\\Program Files\\Bitmap Production\\${props.gameObject.gameBinaryName}`);
 
 //
 async function pullInstallState() {
@@ -70,12 +72,12 @@ async function pullInstallState() {
     }
 
     // Check is installation path valid
-    if(await window.electronAPI.checkPathValid(InstallInfo.gameInstallationPath)) {
-      InstallInfo.gameInstallState = EInstallState.Installed;
+    if(InstallInfo.gameInstallationPath) {
+      if(await window.electronAPI.checkPathValid(InstallInfo.gameInstallationPath)) {
+        InstallInfo.gameInstallState = EInstallState.Installed;
+      }
     }
-    else {
-      InstallInfo.gameInstallState = EInstallState.NotInstalled;
-    }
+    else InstallInfo.gameInstallState = EInstallState.NotInstalled;
 
     // Push install state
     pushInstallState();
@@ -96,7 +98,9 @@ async function pushInstallState() {
 }
 
 async function downloadAndInstall(url: string | null, savePath: string) {
-  const savePathLocal: string | null = `${savePath}/${props.gameObject.gameBinaryName}`;
+  const savePathLocal: string | null = props.platform === 'darwin'
+      ? `${savePath}/${props.gameObject.gameBinaryName}`
+      : `${savePath}\\${props.gameObject.gameBinaryName}`;
   console.log(`URL: ${url}, SavePath: ${savePathLocal}`);
 
   try {
@@ -406,6 +410,7 @@ onMounted(() => {
             :rules="[v => !!v || 'Field is required']"
             @click="selectDirectory()"
             hint="Click to select directory"
+            persistent-hint
             readonly
             dense
         ></v-text-field>

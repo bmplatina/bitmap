@@ -7,12 +7,13 @@ import unzipper from 'unzipper';
 import { exec } from "node:child_process";
 import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
 
-// Parameter saver
-const gameInstallInfoDb = new Datastore({ filename: 'gameInstallInfo.db', autoload: true });
-
 // Platform
 const platformName: string = process.platform;
 const bIsDev: boolean = process.env.NODE_ENV === 'development';
+
+// Parameter saver
+const dbPath: string = bIsDev ? './gameInstallInfo.db' : app.getPath('userData');
+const gameInstallInfoDb = new Datastore({ filename: dbPath, autoload: true });
 
 // Expose Window for Dialog Support
 let MAIN_WINDOW: BrowserWindow;
@@ -45,12 +46,12 @@ function createWindow () {
     mainWindow.loadFile(join(app.getAppPath(), 'renderer', 'index.html'));
   }
 
-  // mainWindow.webContents.addListener('before-input-event', (event, input) => {
-  //   // Ctrl + R 또는 F5를 눌렀을 때
-  //   if ((input.key === 'r' && input.control) || input.key === 'F5') {
-  //     event.preventDefault(); // 기본 동작 막기
-  //   }
-  // });
+  mainWindow.webContents.addListener('before-input-event', (event, input) => {
+    // Ctrl + R 또는 F5를 눌렀을 때
+    if ((input.key === 'r' && input.control) || input.key === 'F5') {
+      event.preventDefault(); // 기본 동작 막기
+    }
+  });
 
   return mainWindow;
 }
@@ -190,9 +191,7 @@ ipcMain.handle('remove-file', async (event, targetPath: string): Promise<boolean
   const directory = dirname(targetPath);
   if(fs.existsSync(directory)) {
     fs.rmSync(directory, { recursive: true });
-    if(!fs.existsSync(directory)) {
-      return true;
-    }
+    return !fs.existsSync(directory);
   }
   return false;
 });
