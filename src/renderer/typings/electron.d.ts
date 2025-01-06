@@ -1,4 +1,5 @@
-// import {GameInstallInfo} from "../types/GameInstallInfo";
+import { GameInstallInfo } from "../types/GameInstallInfo";
+import Electron = require("electron");
 
 /**
  * Should match main/preload.ts for typescript support in renderer
@@ -9,6 +10,7 @@ export default interface ElectronApi {
   showDialog: (options: Electron.OpenDialogOptions) => string,
 
   getPlatform: () => string,
+  getLocale: () => string,
 
   openExternal: (url: string) => void,
 

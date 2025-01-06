@@ -12,7 +12,7 @@ const platformName: string = process.platform;
 const bIsDev: boolean = process.env.NODE_ENV === 'development';
 
 // Parameter saver
-const dbPath: string = bIsDev ? './gameInstallInfo.db' : app.getPath('userData');
+const dbPath: string = bIsDev ? './gameInstallInfo.db' : join(app.getPath('userData'), 'gameInstallInfo.db');
 const gameInstallInfoDb = new Datastore({ filename: dbPath, autoload: true });
 
 // Expose Window for Dialog Support
@@ -21,11 +21,11 @@ let MAIN_WINDOW: BrowserWindow;
 function createWindow () {
   const mainWindow = new BrowserWindow({
     title: "Bitmap",
-    width: 1400,
+    width: 1440,
     height: 900,
     minWidth: 1366,
     minHeight: 768,
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     fullscreenable: true,
     titleBarStyle: "hiddenInset",
     frame: platformName === 'darwin',
@@ -93,7 +93,12 @@ ipcMain.handle('show-dialog', async (event, options) => {
 
 // 플랫폼 가져오기
 ipcMain.handle('get-platform', (event) => {
-  return process.platform;
+  return platformName;
+});
+
+// 플랫폼 가져오기
+ipcMain.handle('get-locale', (event): string => {
+  return app.getLocale();
 });
 
 // download
@@ -191,14 +196,12 @@ ipcMain.handle('remove-file', async (event, targetPath: string): Promise<boolean
   const directory = dirname(targetPath);
   if(fs.existsSync(directory)) {
     fs.rmSync(directory, { recursive: true });
-    return !fs.existsSync(directory);
   }
-  return false;
+  return !fs.existsSync(directory);
 });
 
 // Save data
 // 데이터 설정
-
 ipcMain.handle('game-install-info-insert', (_, value: GameInstallInfo): Promise<any> => {
   return new Promise((resolve, reject) => {
     gameInstallInfoDb.insert(value, (err, newDoc) => {
@@ -214,10 +217,12 @@ ipcMain.handle('game-install-info-insert', (_, value: GameInstallInfo): Promise<
 // 데이터 가져오기
 ipcMain.handle('game-install-info-get-by-index', (_, gameIdIndex: number): Promise<any> => {
   return new Promise((resolve, reject) => {
-    gameInstallInfoDb.find({ gameId: gameIdIndex }, (err, docs) => {
+    gameInstallInfoDb.find({ gameId: gameIdIndex }, (err, docs: GameInstallInfo) => {
       if (err) {
+        console.error(err);
         reject(err);
       } else {
+        console.log("GetByIndex Succeed: ", typeof docs, docs);
         resolve(docs);
       }
     })

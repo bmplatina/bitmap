@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {onMounted, reactive} from "vue";
+import { onMounted, reactive } from "vue";
 import axios from "axios";
-import {Game} from "../types/GameList"
+import { Game } from "../types/GameList"
 import GameEsdDetails from "./GameEsdDetails.vue";
 import {reset} from "chalk";
 import {pl} from "vuetify/locale";

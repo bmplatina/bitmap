@@ -10,6 +10,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Get platform name by process.platform
   getPlatform: () => ipcRenderer.invoke('get-platform'),
 
+  // Get OS default language
+  getLocale: () => ipcRenderer.invoke('get-locale'),
+
   // Open external link in browser
   openExternal: (url: string) => shell.openExternal(url),
 
