@@ -68,7 +68,7 @@ async function pullInstallState() {
     getResultLocal.then((resolvedData: GameInstallInfo) => {
       console.log("pullInstallState::resolvedData", resolvedData);
       // If getting from store succeed, allocate it to property
-      if(!!resolvedData.gameId) {
+      if(!!resolvedData) {
         console.log("pullInstallState: If getting from store succeed, allocate it to property", resolvedData);
         InstallState.value = resolvedData.gameInstallState;
         InstallationPath.value = resolvedData.gameInstallationPath;
@@ -105,6 +105,7 @@ async function pushInstallState() {
   try {
     const getResultLocal: Promise<GameInstallInfo> = window.electronAPI.getGameInstallInfoByIndex(props.gameObject.gameId);
     getResultLocal.then((resolvedData: GameInstallInfo) => {
+      console.log("pushInstallState::resolvedData", resolvedData);
       let InstallInfo: GameInstallInfo = {
         ...props.gameObject,
         gameInstallationPath: InstallationPath.value,
@@ -112,12 +113,15 @@ async function pushInstallState() {
         gameInstalledVersion: '', // @todo Version support
       };
 
-      const bUpdateExising: boolean = !!resolvedData.gameId;
+      const bUpdateExising: boolean = !!resolvedData;
       console.log("pushInstallState::bUpdateExisting", bUpdateExising);
       // If resolvedData valid, Update from existing table, otherwise insert new table
-      bUpdateExising
-            ? window.electronAPI.updateGameInstallInfo(props.gameObject.gameId, InstallInfo)
-            : window.electronAPI.setGameInstallInfo(InstallInfo);
+      if(bUpdateExising) {
+        window.electronAPI.updateGameInstallInfo(props.gameObject.gameId, InstallInfo);
+      }
+      else {
+        window.electronAPI.setGameInstallInfo(InstallInfo);
+      }
     });
   } catch (error) {
     console.log(error);

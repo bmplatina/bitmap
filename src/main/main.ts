@@ -217,7 +217,7 @@ ipcMain.handle('game-install-info-insert', (_, value: GameInstallInfo): Promise<
 // 데이터 가져오기
 ipcMain.handle('game-install-info-get-by-index', (_, gameIdIndex: number): Promise<any> => {
   return new Promise((resolve, reject) => {
-    gameInstallInfoDb.find({ gameId: gameIdIndex }, (err, docs: GameInstallInfo) => {
+    gameInstallInfoDb.findOne({ gameId: gameIdIndex }, (err, docs: GameInstallInfo) => {
       if (err) {
         console.error(err);
         reject(err);
@@ -232,7 +232,7 @@ ipcMain.handle('game-install-info-get-by-index', (_, gameIdIndex: number): Promi
 // 데이터 삭제
 ipcMain.handle('game-install-info-delete', (_, gameIdIndex: number): Promise<any> => {
   return new Promise((resolve, reject) => {
-    gameInstallInfoDb.remove({ gameId: gameIdIndex }, {}, function (err, numRemoved) {
+    gameInstallInfoDb.remove({ gameId: gameIdIndex }, function (err, numRemoved) {
       if (err) {
         reject(err);
       } else {
@@ -246,7 +246,7 @@ ipcMain.handle('game-install-info-delete', (_, gameIdIndex: number): Promise<any
 ipcMain.handle('game-install-info-update', (event, gameIdIndex: number, gameInstallInfo: GameInstallInfo) => {
   // 조건에 맞는 데이터 업데이트
   return new Promise((resolve, reject) => {
-    gameInstallInfoDb.update({ gameId: gameIdIndex }, { $set: gameInstallInfo }, {}, function (err, numReplaced) {
+    gameInstallInfoDb.update({ gameId: gameIdIndex }, { $set: gameInstallInfo }, { upsert: false }, function (err, numReplaced) {
       if (err) {
         reject(err);
       } else {
@@ -254,7 +254,7 @@ ipcMain.handle('game-install-info-update', (event, gameIdIndex: number, gameInst
       }
     });
   })
-})
+});
 
 // Store Init
 ipcMain.handle('check-executable-or-app', async (_, dirPath: string): Promise<boolean> => {
