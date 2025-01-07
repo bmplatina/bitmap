@@ -1,4 +1,5 @@
 {
+    "productName": "Bitmap",
     "appId": "com.prodbybitmap.esd",
     "directories": {
         "output": "dist"
@@ -11,12 +12,16 @@
         "oneClick": false,
         "perMachine": false,
         "allowToChangeInstallationDirectory": true,
-        "shortcutName": "Electron App"
+        "shortcutName": "Bitmap"
     },
 
     "win": {
-        "target": "nsis",
-        "icon": "assets/AppIcon.ico"
+        "icon": "assets/AppIcon.ico",
+        "requestedExecutionLevel": "requireAdministrator",
+        "target": {
+            "target": "nsis",
+            "arch": "x64"
+        }
     },
     "mac": {
         "category": "public.app-category.utilities",
