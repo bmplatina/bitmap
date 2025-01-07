@@ -21,10 +21,6 @@ const toggleLanguage = () => {
 }
 
 window.electronAPI.sendMessage('Hello from App.vue!');
-
-onMounted(() => {
-  window.electronAPI.checkUpdates();
-});
 </script>
 
 <template>

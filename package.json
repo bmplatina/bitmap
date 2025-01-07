@@ -15,16 +15,6 @@
     "name": "Platina",
     "url": "https://www.prodbybitmap.com/"
   },
-  "build": {
-    "appId": "com.prodbybitmap.esd",
-    "publish": [
-      {
-        "provider": "github",
-        "repo": "bitmap",
-        "owner": "bmplatina"
-      }
-    ]
-  },
   "devDependencies": {
     "@intlify/vue-i18n-loader": "^4.2.0",
     "@types/node": "^22.10.3",
@@ -42,7 +32,6 @@
     "@types/electron": "^1.6.12",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
-    "electron-updater": "^6.3.9",
     "es-hangul": "^2.2.6",
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",

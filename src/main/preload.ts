@@ -2,17 +2,6 @@ import {contextBridge, ipcRenderer, shell} from 'electron';
 import {GameInstallInfo} from "../renderer/types/GameInstallInfo";
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  checkUpdates: () => ipcRenderer.on('update_available', () => {
-    alert('새 업데이트가 있습니다. 곧 다운로드를 시작합니다.');
-  }),
-
-  updateRestart: () =>ipcRenderer.on('update_downloaded', () => {
-    const response = confirm('업데이트가 완료되었습니다. 지금 앱을 다시 시작하시겠습니까?');
-    if (response) {
-      ipcRenderer.send('restart_app');
-    }
-  }),
-
   sendMessage: (message: string) => ipcRenderer.send('message', message),
 
   // Show Directory or File selector

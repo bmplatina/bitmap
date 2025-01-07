@@ -5,9 +5,6 @@ import Electron = require("electron");
  * Should match main/preload.ts for typescript support in renderer
  */
 export default interface ElectronApi {
-  checkUpdates: () => void,
-  updateRestart: () => void,
-
   sendMessage: (message: string) => void,
 
   showDialog: (options: Electron.OpenDialogOptions) => string,

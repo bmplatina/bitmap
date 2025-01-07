@@ -6,7 +6,6 @@ import axios from 'axios';
 import unzipper from 'unzipper';
 import { exec } from "node:child_process";
 import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
-const { autoUpdater } = require('electron-updater');
 
 // Platform
 const platformName: string = process.platform;
@@ -60,9 +59,6 @@ app.whenReady().then(() => {
     }
   });
 
-  // 자동 업데이트 체크
-  autoUpdater.checkForUpdatesAndNotify();
-
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -83,15 +79,6 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
-});
-
-// 업데이트 이벤트 처리
-autoUpdater.on('update-available', () => {
-  MAIN_WINDOW.webContents.send('update_available');
-});
-
-autoUpdater.on('update-downloaded', () => {
-  MAIN_WINDOW.webContents.send('update_downloaded');
 });
 
 ipcMain.on('message', (event, message) => {
