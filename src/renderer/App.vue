@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {onMounted} from "vue";
 import { Vue3Lottie } from "vue3-lottie";
 import BitmapIntro from "./assets/lottie_BitmapBaseIntro.json";
 import { useI18n } from "vue-i18n";
@@ -20,6 +21,10 @@ const toggleLanguage = () => {
 }
 
 window.electronAPI.sendMessage('Hello from App.vue!');
+
+onMounted(() => {
+  window.electronAPI.checkUpdates();
+});
 </script>
 
 <template>

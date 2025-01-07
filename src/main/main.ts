@@ -6,6 +6,7 @@ import axios from 'axios';
 import unzipper from 'unzipper';
 import { exec } from "node:child_process";
 import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
+const { autoUpdater } = require('electron-updater');
 
 // Platform
 const platformName: string = process.platform;
@@ -46,18 +47,21 @@ function createWindow () {
     mainWindow.loadFile(join(app.getAppPath(), 'renderer', 'index.html'));
   }
 
-  mainWindow.webContents.addListener('before-input-event', (event, input) => {
+  return mainWindow;
+}
+
+app.whenReady().then(() => {
+  MAIN_WINDOW = createWindow();
+
+  MAIN_WINDOW.webContents.addListener('before-input-event', (event, input) => {
     // Ctrl + R 또는 F5를 눌렀을 때
     if ((input.key === 'r' && input.control) || input.key === 'F5') {
       event.preventDefault(); // 기본 동작 막기
     }
   });
 
-  return mainWindow;
-}
-
-app.whenReady().then(() => {
-  MAIN_WINDOW = createWindow();
+  // 자동 업데이트 체크
+  autoUpdater.checkForUpdatesAndNotify();
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -79,6 +83,15 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
+});
+
+// 업데이트 이벤트 처리
+autoUpdater.on('update-available', () => {
+  MAIN_WINDOW.webContents.send('update_available');
+});
+
+autoUpdater.on('update-downloaded', () => {
+  MAIN_WINDOW.webContents.send('update_downloaded');
 });
 
 ipcMain.on('message', (event, message) => {
@@ -190,6 +203,21 @@ ipcMain.handle('run-command', (event, command) => {
   });
 });
 
+// Check Is Installed
+ipcMain.handle('check-executable-or-app', (event, dirPath: string): boolean => {
+  try {
+    const extensionName = platformName === 'darwin'
+        ? '.app/'
+        : '.exe';
+    const targetPath = dirPath + extensionName;
+    console.log(`dirPath: ${dirPath}, targetPath: ${targetPath}`);
+    return fs.existsSync(targetPath);
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+});
+
 // Delete file
 ipcMain.handle('remove-file', async (event, targetPath: string): Promise<boolean> => {
   // 디렉터리 없을 시 생성
@@ -208,6 +236,7 @@ ipcMain.handle('game-install-info-insert', (_, value: GameInstallInfo): Promise<
       if (err) {
         reject(err);
       } else {
+        gameInstallInfoDb.loadDatabase();
         resolve(newDoc);
       }
     })
@@ -236,6 +265,7 @@ ipcMain.handle('game-install-info-delete', (_, gameIdIndex: number): Promise<any
       if (err) {
         reject(err);
       } else {
+        gameInstallInfoDb.loadDatabase();
         resolve(numRemoved);
       }
     });
@@ -250,28 +280,9 @@ ipcMain.handle('game-install-info-update', (event, gameIdIndex: number, gameInst
       if (err) {
         reject(err);
       } else {
+        gameInstallInfoDb.loadDatabase();
         resolve(numReplaced);
       }
     });
   })
-});
-
-// Store Init
-ipcMain.handle('check-executable-or-app', async (_, dirPath: string): Promise<boolean> => {
-  try {
-    // 디렉터리 내용 읽기
-    const files = await fs.promises.readdir(dirPath, { withFileTypes: true });
-
-    // .exe 파일 또는 .app 디렉터리가 있는지 검사
-    return files.some((file) => {
-      const ext = extname(file.name).toLowerCase();
-      return (
-          (file.isFile() && ext === '.exe') || // .exe 파일
-          (file.isDirectory() && file.name.endsWith('.app')) // .app 디렉터리
-      );
-    });
-  } catch (error) {
-    console.error('오류 발생:', error);
-    return false; // 오류 발생 시 false 반환
-  }
 });

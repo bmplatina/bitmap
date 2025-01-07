@@ -26,7 +26,8 @@ const config = defineConfig({
     },
     define: {
         'process.env': {}
-    }
+    },
+    assetsInclude: ['**/*.png', '**/*.svg', '**/*.jpg'],
 });
 
 module.exports = config;

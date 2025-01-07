@@ -1,10 +1,10 @@
-import { createI18n } from "vue-i18n";
+import {createI18n} from "vue-i18n";
 
 // Import Localization table
 import ko from "./locales/ko.json";
 import en from "./locales/en.json";
 
-const osLocale = await window.electronAPI.getLocale();
+const osLocale = navigator.language.split('-')[0];
 console.log("TargetLanguage: ", osLocale);
 
 const messages = {

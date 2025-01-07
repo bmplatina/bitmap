@@ -1,10 +1,16 @@
 <script setup lang="ts">
+// Libraries
 import { onMounted, ref } from 'vue'
 import { Game } from "../types/GameList";
 import { EInstallState, GameInstallInfo } from '../types/GameInstallInfo';
 import { useI18n } from 'vue-i18n';
 import dayjs from "dayjs";
-import {tr} from "vuetify/locale";
+
+// Images
+import UnknownImage from '../assets/unknownImage.png';
+import PlatformWindows11Image from '../assets/platformWindows11.png';
+import PlatformMacOSImage from '../assets/platformMac.png';
+
 
 const { t } = useI18n();
 
@@ -84,7 +90,12 @@ async function pullInstallState() {
 
       // Check is installation path valid
       if(InstallationPath.value) {
-        window.electronAPI.checkPathValid(`${InstallationPath.value}/${props.gameObject.gameBinaryName}`).then((bIsValid: boolean) => {
+        const literalInstallationPath = props.platform === 'darwin'
+            ? `${InstallationPath.value}/${props.gameObject.gameBinaryName}`
+            : `${InstallationPath.value}\\${props.gameObject.gameBinaryName}`;
+
+        window.electronAPI.checkPathValid(literalInstallationPath).then((bIsValid: boolean) => {
+          console.log(`pullInstallState::checkPathValid: ${bIsValid} from game ${props.gameObject.gameTitle}`);
           InstallState.value = bIsValid ? EInstallState.Installed : EInstallState.NotInstalled;
         });
       }
@@ -129,6 +140,8 @@ async function pushInstallState() {
 }
 
 async function downloadAndInstall(url: string | null, savePath: string) {
+  if(url == null) return;
+
   const savePathLocal: string | null = props.platform === 'darwin'
       ? `${savePath}/${props.gameObject.gameBinaryName}`
       : `${savePath}\\${props.gameObject.gameBinaryName}`;
@@ -159,6 +172,7 @@ async function downloadAndInstall(url: string | null, savePath: string) {
 
     InstallState.value = EInstallState.Installed; // 작업 완료
     // InstallInfo.gameInstalledVersion = props.gameObject.gameLatestVersion;
+    bIsInstallModalOpened.value = false;
     pushInstallState();
     console.log(`설치 완료: EInstallState.Installed: ${InstallState.value === EInstallState.Installed}`);
   }
@@ -235,19 +249,14 @@ async function openApp() {
 }
 
 async function removeApp() {
-  // let binaryPath: string = "";
-  // if (props.platform === "win32") {
-  //   binaryPath = `${InstallationPath.value}\\${props.gameObject.gameBinaryName}.exe`;
-  // } else if (props.platform === "darwin") {
-  //   binaryPath = `${InstallationPath.value}/${props.gameObject.gameBinaryName}.app`;
-  // } else {
-  //   console.error("지원하지 않는 플랫폼입니다.");
-  //   return;
-  // }
-
-  if(await window.electronAPI.removeFile(InstallationPath.value)) {
-    InstallState.value = EInstallState.NotInstalled;
-    pushInstallState();
+  if(InstallationPath.value) {
+    console.log(InstallationPath.value);
+    if(await window.electronAPI.removeFile(InstallationPath.value)) {
+      InstallState.value = EInstallState.NotInstalled;
+      InstallationPath.value = DefaultInstallationPath;
+      bIsUninstallModalOpened.value = false;
+      await pushInstallState();
+    }
   }
 }
 
@@ -261,7 +270,7 @@ onMounted(() => {
   <v-card max-width="400">
     <v-img
       :src="gameObject.gameImageURL"
-      lazy-src="../assets/unknownImage.png"
+      :lazy-src="UnknownImage"
       :alt="gameObject.gameTitle"
       cover
       @click="bIsDetailModalOpened = true"
@@ -271,14 +280,14 @@ onMounted(() => {
         <h2 class="title primary--text mb-2" @click="bIsDetailModalOpened = true">{{ gameObject.gameTitle }}</h2>
         <div class="d-flex align-center mb-2">
           <v-img
-              src="../assets/platformWindows11.png"
+              :src="PlatformWindows11Image"
               v-if="props.gameObject.gamePlatformWindows == 1"
               :max-width="20"
               :max-height="20"
               style="margin-right: 8px"
           ></v-img>
           <v-img
-              src="../assets/platformMac.png"
+              :src="PlatformMacOSImage"
               v-if="props.gameObject.gamePlatformMac == 1"
               :max-width="20"
               :max-height="20"
@@ -327,7 +336,7 @@ onMounted(() => {
             <v-img
                 class="rounded-xl mx-auto"
                 :src="gameObject.gameImageURL"
-                lazy-src="../assets/unknownImage.png"
+                :lazy-src="UnknownImage"
                 :alt="gameObject.gameTitle"
                 :max-width="240"
                 style="margin-top: calc(4% + 16px)"
@@ -420,10 +429,10 @@ onMounted(() => {
   </v-dialog>
 
   <!-- Install View -->
-  <v-dialog v-model="bIsInstallModalOpened" width="30%" height="75%">
+  <v-dialog v-model="bIsInstallModalOpened" width="30%" height="75%" persistent>
     <v-card>
       <v-card-title class="headline grey lighten-2" primary-title>
-        Installing {{ gameObject.gameTitle }}
+        {{ $filters.getLanguage() == 'ko' ? gameObject.gameTitle + $t('installing') : $t('installing') + gameObject.gameTitle  }}
       </v-card-title>
       <v-divider />
       <div style="margin-top: 4%; margin-bottom: 1%; margin-left: 16%; margin-right: 16%;">
@@ -447,6 +456,7 @@ onMounted(() => {
             :rules="[v => !!v || 'Field is required']"
             @click="selectDirectory()"
             :hint="$t('installation-path-hint')"
+            :disabled="InstallState === EInstallState.Downloading || InstallState === EInstallState.Extracting"
             persistent-hint
             readonly
             dense
@@ -481,6 +491,47 @@ onMounted(() => {
           color="red"
           flat
           @click="bIsInstallModalOpened = false;"
+        >{{ $t('cancel') }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- Uninstall View -->
+  <v-dialog v-model="bIsUninstallModalOpened" width="50%" height="50%" persistent>
+    <v-card>
+      <v-card-title class="headline grey lighten-2" primary-title>
+        {{ $t('uninstall') }}
+      </v-card-title>
+      <v-divider />
+      <div style="margin-top: 4%; margin-bottom: 1%; margin-left: 16%; margin-right: 16%;">
+        <h2 class="display-1 my-5">{{ $filters.getLanguage() == 'ko' ? gameObject.gameTitle + $t('uninstalling') : $t('uninstalling') + gameObject.gameTitle  }}</h2>
+        <v-text-field
+            class="flex-grow-1 mr-2"
+            :label="$t('uninstall')"
+            v-model="InstallationPath"
+            readonly
+            dense
+        ></v-text-field>
+        <v-card-text style="white-space: pre-line;">
+          {{ gameObject.gameTitle + $t('will-be-removed') }}
+        </v-card-text>
+      </div>
+
+      <v-spacer/>
+      <v-divider/>
+
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+            color="red"
+            flat
+            @click="removeApp()"
+            :disabled="!bIsPlatformCompatible || InstallState === EInstallState.Downloading || InstallState === EInstallState.Extracting || InstallationPath === ''"
+        >{{ $t('uninstall') }}</v-btn>
+        <v-btn
+            color="primary"
+            flat
+            @click="bIsUninstallModalOpened = false;"
         >{{ $t('cancel') }}</v-btn>
       </v-card-actions>
     </v-card>
