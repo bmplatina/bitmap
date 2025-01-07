@@ -491,6 +491,7 @@ onMounted(() => {
           color="red"
           flat
           @click="bIsInstallModalOpened = false;"
+          :disabled="!bIsPlatformCompatible || InstallState === EInstallState.Downloading || InstallState === EInstallState.Extracting"
         >{{ $t('cancel') }}</v-btn>
       </v-card-actions>
     </v-card>

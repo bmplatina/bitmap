@@ -15,7 +15,8 @@
     },
 
     "win": {
-        "target": "nsis"
+        "target": "nsis",
+        "icon": "assets/AppIcon.ico"
     },
     "mac": {
         "category": "public.app-category.utilities",
