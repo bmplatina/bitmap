@@ -143,8 +143,8 @@ async function downloadAndInstall(url: string | null, savePath: string) {
   if(url == null) return;
 
   const savePathLocal: string | null = props.platform === 'darwin'
-      ? `${savePath}/${props.gameObject.gameBinaryName}`
-      : `${savePath}\\${props.gameObject.gameBinaryName}`;
+      ? `${savePath}/${url.split('/')[url.split('/').length - 1]}`
+      : `${savePath}\\${url.split('/')[url.split('/').length - 1]}`;
   console.log(`URL: ${url}, SavePath: ${savePathLocal}`);
 
   try {
@@ -194,7 +194,9 @@ async function selectDirectory() {
   try {
     const path = await (window as any).electronAPI.showDialog(options);
     if (path) {
-      InstallationPath.value = `${path}/${props.gameObject.gameBinaryName}`; // 선택한 경로 저장
+      InstallationPath.value = props.platform === 'darwin'
+          ? `${path}/${props.gameObject.gameBinaryName}/`
+          : `${path}\\${props.gameObject.gameBinaryName}\\`; // 선택한 경로 저장
     }
   } catch (error) {
     console.error('파일 선택 중 오류 발생:', error);
