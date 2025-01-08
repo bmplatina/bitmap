@@ -27,6 +27,7 @@
 interface Game {
     gameId: number;
     gameTitle: string;
+    gameLatestRevision: number;
     gamePlatformWindows: number;
     gamePlatformMac: number;
     gamePlatformMobile: number;

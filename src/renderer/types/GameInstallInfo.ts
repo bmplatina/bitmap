@@ -10,7 +10,7 @@ const enum EInstallState {
 
 interface GameInstallInfo extends Game {
     gameInstallationPath: string;
-    gameInstalledVersion: string;
+    gameInstalledVersion: number;
     gameInstallState: EInstallState;
 }
 

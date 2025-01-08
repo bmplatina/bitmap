@@ -25,9 +25,9 @@ function createWindow () {
     height: 900,
     minWidth: 1366,
     minHeight: 768,
-    autoHideMenuBar: false,
+    // autoHideMenuBar: false,
     fullscreenable: true,
-    titleBarStyle: "hiddenInset",
+    // titleBarStyle: "hiddenInset",
     frame: platformName === 'darwin',
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
@@ -51,6 +51,17 @@ function createWindow () {
 
 app.whenReady().then(() => {
   MAIN_WINDOW = createWindow();
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "frame-src https://www.youtube.com/"
+        ]
+      }
+    })
+  })
 
   MAIN_WINDOW.webContents.addListener('before-input-event', (event, input) => {
     // Ctrl + R 또는 F5를 눌렀을 때
@@ -206,13 +217,21 @@ ipcMain.handle('check-executable-or-app', (event, dirPath: string): boolean => {
 });
 
 // Delete file
-ipcMain.handle('remove-file', async (event, targetPath: string): Promise<boolean> => {
-  // 디렉터리 없을 시 생성
-  const directory = dirname(targetPath);
-  if(fs.existsSync(directory)) {
-    fs.rmSync(directory, { recursive: true });
+ipcMain.handle('remove-file',  (event, targetPath: string): boolean => {
+  // 파일 또는 디렉터리가 존재하는지 확인
+  if (fs.existsSync(targetPath)) {
+    const stats = fs.statSync(targetPath);
+    if (stats.isDirectory()) {
+      // targetPath가 디렉터리라면 삭제
+      fs.rmSync(targetPath, { recursive: true, force: true });
+    } else {
+      // targetPath가 파일이라면 삭제
+      fs.unlinkSync(targetPath);
+    }
   }
-  return !fs.existsSync(directory);
+
+  // targetPath 삭제 여부 반환
+  return !fs.existsSync(targetPath);
 });
 
 // Save data

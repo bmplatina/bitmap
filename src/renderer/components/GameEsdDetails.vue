@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Libraries
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { Game } from "../types/GameList";
 import { EInstallState, GameInstallInfo } from '../types/GameInstallInfo';
 import { useI18n } from 'vue-i18n';
@@ -18,6 +18,10 @@ const props = defineProps<{
   gameObject: Game,
   platform: string,
 }>();
+
+const YouTubeURL = computed(() => {
+  return `https://www.youtube.com/embed/${props.gameObject.gameVideoURL}`;
+});
 
 /*
  * Released Ago
@@ -57,10 +61,11 @@ let bIsUninstallModalOpened = ref(false);
 /*
  * Download & Installation
  */
+let bIsUpdatable = ref(false);
 let downloadProgress = ref(0);
 let extractProgress = ref(0);
 let InstallationPath = ref('');
-let CurrentVersion = ref('');
+let CurrentVersion = ref(1);
 let InstallState = ref<EInstallState>(EInstallState.NotInstalled);
 const DefaultInstallationPath = props.platform === 'darwin'
     ? `/Users/Shared/Bitmap Production/${props.gameObject.gameBinaryName}`
@@ -79,13 +84,16 @@ async function pullInstallState() {
         InstallState.value = resolvedData.gameInstallState;
         InstallationPath.value = resolvedData.gameInstallationPath;
         CurrentVersion.value = resolvedData.gameInstalledVersion;
+        if(props.gameObject.gameLatestRevision > CurrentVersion.value) {
+          bIsUpdatable.value = true;
+        }
       }
       // Otherwise, initialize property
       else {
         console.log('pullInstallState: Otherwise, initialize property');
         InstallationPath.value = DefaultInstallationPath;
         InstallState.value = EInstallState.NotInstalled;
-        CurrentVersion.value = '';
+        CurrentVersion.value = 0;
       }
 
       // Check is installation path valid
@@ -101,7 +109,7 @@ async function pullInstallState() {
       }
       else InstallState.value = EInstallState.NotInstalled;
 
-      // Sync install state
+      // Sync installation state
       pushInstallState();
     });
   } catch (error) {
@@ -121,7 +129,7 @@ async function pushInstallState() {
         ...props.gameObject,
         gameInstallationPath: InstallationPath.value,
         gameInstallState: InstallState.value,
-        gameInstalledVersion: '', // @todo Version support
+        gameInstalledVersion: CurrentVersion.value,
       };
 
       const bUpdateExising: boolean = !!resolvedData;
@@ -171,8 +179,9 @@ async function downloadAndInstall(url: string | null, savePath: string) {
     console.log(`압축 해제 완료: ${extractedPath}, EInstallState.Extracting: ${InstallState.value === EInstallState.Extracting}`);
 
     InstallState.value = EInstallState.Installed; // 작업 완료
-    // InstallInfo.gameInstalledVersion = props.gameObject.gameLatestVersion;
+    CurrentVersion.value = props.gameObject.gameLatestRevision;
     bIsInstallModalOpened.value = false;
+    bIsUpdatable.value = false;
     pushInstallState();
     console.log(`설치 완료: EInstallState.Installed: ${InstallState.value === EInstallState.Installed}`);
   }
@@ -350,7 +359,7 @@ onMounted(() => {
           </div>
         </v-col>
 
-        <v-divider vertical style="margin-top: 1%; margin-bottom: 1%"></v-divider>
+        <v-divider vertical style="margin-top: 12px; margin-bottom: 12px"></v-divider>
 
         <v-col cols="9" style="display: flex; flex-direction: column; height: 100%;" class="align-center">
           <div style="flex: 1; overflow-y: auto; margin-top: 4%; margin-bottom: 1%; margin-left: 4%; margin-right: 4%;">
@@ -360,10 +369,15 @@ onMounted(() => {
                 variant="tonal"
                 style="white-space: pre-line;"
             >
-              <webview
-                  :src="'https://www.youtube.com/embed/' + gameObject.gameVideoURL"
+              <iframe
+                  :src="YouTubeURL"
+                  class="mx-auto"
+                  frameborder="0" allowfullscreen
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
                   style="width: 512px; height: 288px; margin-top: 4%"
-              ></webview>
+                  referrerpolicy="no-referrer"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              ></iframe>
             </v-card>
             <v-card
                 class="mt-4 pa-3 rounded-xl"
@@ -376,6 +390,11 @@ onMounted(() => {
                 <p>{{ $t('genre') }}: {{ gameObject.gameGenre }}</p>
                 <p>{{ $t('developer') }}: {{ gameObject.gameDeveloper }}</p>
                 <p>{{ $t('publisher') }}: {{ gameObject.gamePublisher }}</p>
+                <div v-if="GetIsPlatformCompatible()">
+                  <v-divider style="margin-top: 1%; margin-bottom: 1%"/>
+                  <p>{{ $t('latest-version') + gameObject.gameLatestRevision }}</p>
+                  <p v-if="bIsUpdatable && InstallState === EInstallState.Installed">{{ $t('current-version') + CurrentVersion }}</p>
+                </div>
                 <a :href="gameObject.gameWebsite" @click="openExternal">{{ $t('official-website') }}</a>
               </v-card-text>
             </v-card>
@@ -431,7 +450,7 @@ onMounted(() => {
   </v-dialog>
 
   <!-- Install View -->
-  <v-dialog v-model="bIsInstallModalOpened" width="30%" height="75%" persistent>
+  <v-dialog v-model="bIsInstallModalOpened" width="30%" height="75%" :persistent="InstallState === EInstallState.Downloading || InstallState === EInstallState.Extracting">
     <v-card>
       <v-card-title class="headline grey lighten-2" primary-title>
         {{ $filters.getLanguage() == 'ko' ? gameObject.gameTitle + $t('installing') : $t('installing') + gameObject.gameTitle  }}

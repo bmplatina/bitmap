@@ -1,6 +1,13 @@
 {
     "productName": "Bitmap",
     "appId": "com.prodbybitmap.esd",
+    "publish": [
+        {
+            "provider": "github",
+            "repo": "bitmap",
+            "owner": "bmplatina"
+        }
+    ],
     "directories": {
         "output": "dist"
     },
