@@ -42,6 +42,7 @@ window.electronAPI.sendMessage('Hello from App.vue!');
             :animationData="BitmapIntro"
             :height="200"
             :width="200"
+            :loop="false"
         />
         <GameEsdView/>
       </v-main>

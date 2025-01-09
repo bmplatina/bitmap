@@ -11,6 +11,9 @@ import UnknownImage from '../assets/unknownImage.png';
 import PlatformWindows11Image from '../assets/platformWindows11.png';
 import PlatformMacOSImage from '../assets/platformMac.png';
 
+// Markdown
+import VueMarkdown from "vue-markdown-render";
+
 
 const { t } = useI18n();
 
@@ -401,10 +404,13 @@ onMounted(() => {
             <v-card
                 class="mt-4 pa-3 rounded-xl"
                 :title="gameObject.gameHeadline"
-                :text="gameObject.gameDescription"
                 variant="tonal"
                 style="white-space: pre-line;"
-            ></v-card>
+            >
+              <v-card-text>
+                <VueMarkdown :source="gameObject.gameDescription" />
+              </v-card-text>
+            </v-card>
             <v-card
                 class="mt-4 pa-3 rounded-xl"
                 :title="$t('system-requirements')"
