@@ -86,7 +86,7 @@ async function pullInstallState() {
       console.log("getDefaultInstallPath: ", appPath);
       DefaultInstallationPath.value = props.platform === 'darwin'
           ? `/Users/Shared/Bitmap Production/${props.gameObject.gameBinaryName}`
-          : `${appPath}\\${props.gameObject.gameBinaryName}`;
+          : `${appPath}\\BitmapApps\\${props.gameObject.gameBinaryName}`;
     });
 
     const getResultLocal = window.electronAPI.getGameInstallInfoByIndex(props.gameObject.gameId);
