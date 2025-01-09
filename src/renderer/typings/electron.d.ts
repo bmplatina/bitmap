@@ -29,6 +29,8 @@ export default interface ElectronApi {
   updateGameInstallInfo: (gameIdIndex: number, gameInstallInfo: GameInstallInfo) => Promise<any>,
 
   checkPathValid: (dirPath: string) => Promise<boolean>,
+
+  getElectronStoredPath: () => Promise<string>,
 }
 
 declare global {

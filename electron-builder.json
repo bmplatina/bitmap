@@ -24,7 +24,6 @@
 
     "win": {
         "icon": "assets/AppIcon.ico",
-        "requestedExecutionLevel": "requireAdministrator",
         "target": {
             "target": "nsis",
             "arch": "x64"

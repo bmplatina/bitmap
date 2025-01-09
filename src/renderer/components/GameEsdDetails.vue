@@ -61,6 +61,11 @@ let bIsDetailModalOpened = ref(false);
 let bIsInstallModalOpened = ref(false);
 let bIsUninstallModalOpened = ref(false);
 
+function openInstallModal() {
+  bIsInstallModalOpened.value = true;
+  InstallationPath.value = DefaultInstallationPath.value;
+}
+
 /*
  * Download & Installation
  */
@@ -70,15 +75,21 @@ let extractProgress = ref(0);
 let InstallationPath = ref('');
 let CurrentVersion = ref(1);
 let InstallState = ref<EInstallState>(EInstallState.NotInstalled);
-const DefaultInstallationPath = props.platform === 'darwin'
-    ? `/Users/Shared/Bitmap Production/${props.gameObject.gameBinaryName}`
-    : `C:\\Program Files\\Bitmap Production\\${props.gameObject.gameBinaryName}`;
+let DefaultInstallationPath = ref('');
 
 // NeDB Installation Info saver
 async function pullInstallState() {
   try {
-    const getResultLocal = window.electronAPI.getGameInstallInfoByIndex(props.gameObject.gameId);
+    // Declare default installation path
+    const getDefaultInstallPath = window.electronAPI.getElectronStoredPath();
+    getDefaultInstallPath.then((appPath) => {
+      console.log("getDefaultInstallPath: ", appPath);
+      DefaultInstallationPath.value = props.platform === 'darwin'
+          ? `/Users/Shared/Bitmap Production/${props.gameObject.gameBinaryName}`
+          : `${appPath}\\${props.gameObject.gameBinaryName}`;
+    });
 
+    const getResultLocal = window.electronAPI.getGameInstallInfoByIndex(props.gameObject.gameId);
     getResultLocal.then((resolvedData: GameInstallInfo) => {
       console.log("pullInstallState::resolvedData", resolvedData);
       // If getting from store succeed, allocate it to property
@@ -94,7 +105,7 @@ async function pullInstallState() {
       // Otherwise, initialize property
       else {
         console.log('pullInstallState: Otherwise, initialize property');
-        InstallationPath.value = DefaultInstallationPath;
+        InstallationPath.value = '';
         InstallState.value = EInstallState.NotInstalled;
         CurrentVersion.value = 0;
       }
@@ -267,7 +278,7 @@ async function removeApp() {
     console.log(InstallationPath.value);
     if(await window.electronAPI.removeFile(InstallationPath.value)) {
       InstallState.value = EInstallState.NotInstalled;
-      InstallationPath.value = DefaultInstallationPath;
+      InstallationPath.value = DefaultInstallationPath.value;
       bIsUninstallModalOpened.value = false;
       await pushInstallState();
     }
@@ -318,7 +329,7 @@ onMounted(() => {
       <v-btn
         variant="tonal"
         outlined color="primary"
-        @click="bIsInstallModalOpened = true"
+        @click="openInstallModal()"
         v-if="InstallState === EInstallState.NotInstalled"
         :disabled="!bIsPlatformCompatible"
       >{{ $t('install') }}</v-btn>
@@ -434,7 +445,7 @@ onMounted(() => {
         <v-btn
             color="primary"
             flat
-            @click="bIsInstallModalOpened = true"
+            @click="openInstallModal()"
             v-if="InstallState === EInstallState.NotInstalled"
             :disabled="!bIsPlatformCompatible"
         >{{ bIsPlatformCompatible ? $t('install') : $t('unsupported-platform') }}</v-btn>

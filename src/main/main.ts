@@ -294,3 +294,7 @@ ipcMain.handle('game-install-info-update', (event, gameIdIndex: number, gameInst
     });
   })
 });
+
+ipcMain.handle('get-electron-appdata-path', async (event): Promise<string> => {
+  return app.getPath('userData');
+})

@@ -1,5 +1,5 @@
-import {contextBridge, ipcRenderer, shell} from 'electron';
-import {GameInstallInfo} from "../renderer/types/GameInstallInfo";
+import { app, contextBridge, ipcRenderer, shell } from 'electron';
+import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
 
 contextBridge.exposeInMainWorld('electronAPI', {
   sendMessage: (message: string) => ipcRenderer.send('message', message),
@@ -48,4 +48,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Check is game path valid
   checkPathValid: (dirPath: string) => ipcRenderer.invoke('check-executable-or-app', dirPath),
+
+  // Get Application Stored Path
+  getElectronStoredPath: () => ipcRenderer.invoke('get-electron-appdata-path'),
 });
