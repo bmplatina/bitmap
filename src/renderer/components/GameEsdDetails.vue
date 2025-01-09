@@ -243,9 +243,9 @@ async function openApp() {
 
   if (props.platform === "win32") {
     if (InstallationPath.value.charAt(0) === "C") {
-      openCommand = `${InstallationPath.value}\\${props.gameObject.gameBinaryName}.exe`;
+      openCommand = `"${InstallationPath.value}\\${props.gameObject.gameBinaryName}.exe"`;
     } else {
-      openCommand = `${InstallationPath.value.charAt(0)}: && ${InstallationPath.value}\\${props.gameObject.gameBinaryName}.exe`;
+      openCommand = `${InstallationPath.value.charAt(0)}: ; "${InstallationPath.value}\\${props.gameObject.gameBinaryName}.exe"`;
     }
   } else if (props.platform === "darwin") {
     openCommand = `open "${InstallationPath.value}/${props.gameObject.gameBinaryName}.app"`;

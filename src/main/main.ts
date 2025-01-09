@@ -28,7 +28,7 @@ function createWindow () {
     // autoHideMenuBar: false,
     fullscreenable: true,
     // titleBarStyle: "hiddenInset",
-    frame: platformName === 'darwin',
+    frame: true /* platformName === 'darwin' */,
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
       nodeIntegration: true,
@@ -193,8 +193,10 @@ ipcMain.handle('run-command', (event, command) => {
   return new Promise<string>((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
       if (error) {
+        console.log("'run-command' error", stderr, error);
         reject(stderr || error.message);
       } else {
+        console.log("'run-command' completed", stdout);
         resolve(stdout);
       }
     });
