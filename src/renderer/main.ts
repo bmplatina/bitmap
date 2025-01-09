@@ -53,7 +53,4 @@ app.config.globalProperties.$filters = {
     },
 };
 
-app.use(vuetify);
-app.use(i18n);
-app.use(Vue3Lottie, { name: "LottieAnimation"});
-app.mount('#app');
+app.use(vuetify).use(i18n).use(Vue3Lottie, { name: "LottieAnimation"}).mount('#app');

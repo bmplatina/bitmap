@@ -36,11 +36,11 @@
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",
     "i18next-http-backend": "^3.0.1",
+    "md-editor-v3": "^5.2.1",
     "nedb": "^1.8.0",
     "unzipper": "^0.12.3",
     "vue": "^3.5.13",
     "vue-i18n": "^11.0.1",
-    "vue-markdown-render": "^2.2.1",
     "vue3-lottie": "^3.3.1",
     "vuetify": "^3.7.6"
   }

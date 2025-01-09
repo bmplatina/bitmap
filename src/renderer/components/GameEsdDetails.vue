@@ -12,7 +12,7 @@ import PlatformWindows11Image from '../assets/platformWindows11.png';
 import PlatformMacOSImage from '../assets/platformMac.png';
 
 // Markdown
-import VueMarkdown from "vue-markdown-render";
+import { MdPreview } from "md-editor-v3";
 
 
 const { t } = useI18n();
@@ -419,7 +419,7 @@ onMounted(() => {
                 style="white-space: pre-line;"
             >
               <v-card-text>
-                <VueMarkdown :source="gameObject.gameDescription" />
+                <MdPreview :modelValue="gameObject.gameDescription" />
               </v-card-text>
             </v-card>
             <v-card
