@@ -10,7 +10,7 @@
     "build:mac": "node scripts/build.js && electron-builder --mac",
     "build:linux": "node scripts/build.js && electron-builder --linux"
   },
-  "repository": "https://github.com/deluze/electron-vue-template",
+  "repository": "https://github.com/bmplatina/bitmap",
   "author": {
     "name": "Platina",
     "url": "https://www.prodbybitmap.com/"
