@@ -1,6 +1,6 @@
 {
   "name": "bitmap",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "An Integrated Bitmap Application",
   "main": "main/main.js",
   "scripts": {
@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@intlify/vue-i18n-loader": "^4.2.0",
+    "@types/electron": "^1.6.12",
     "@types/node": "^22.10.3",
     "@types/vue-i18n": "^7.0.0",
     "@vitejs/plugin-vue": "^4.4.1",
@@ -29,9 +30,10 @@
     "vite": "^6.0.6"
   },
   "dependencies": {
-    "@types/electron": "^1.6.12",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
+    "electron-progressbar": "^2.2.1",
+    "electron-updater": "^6.3.9",
     "es-hangul": "^2.2.6",
     "i18next": "^24.2.0",
     "i18next-fs-backend": "^2.6.0",

@@ -15,6 +15,12 @@ const bIsDev: boolean = process.env.NODE_ENV === 'development';
 const dbPath: string = bIsDev ? './gameInstallInfo.db' : join(app.getPath('userData'), 'gameInstallInfo.db');
 const gameInstallInfoDb = new Datastore({ filename: dbPath, autoload: true });
 
+// Auto updater
+import { autoUpdater } from "electron-updater";
+import ProgressBar from "electron-progressbar";
+let progressBar: ProgressBar;
+let updaterIntervalId: NodeJS.Timeout;
+
 // Expose Window for Dialog Support
 let MAIN_WINDOW: BrowserWindow;
 
@@ -61,7 +67,13 @@ app.whenReady().then(() => {
         ]
       }
     })
-  })
+  });
+
+  autoUpdater.checkForUpdatesAndNotify();
+
+  updaterIntervalId = setInterval(() => {
+    autoUpdater.checkForUpdates();
+  }, 60 * 60 * 1000); // 1시간마다 체크
 
   MAIN_WINDOW.webContents.addListener('before-input-event', (event, input) => {
     // Ctrl + R 또는 F5를 눌렀을 때
@@ -90,6 +102,51 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
+});
+
+app.on('will-quit', function () {
+  clearInterval(updaterIntervalId);
+})
+
+// Updater events
+autoUpdater.on('update-available', () => {
+  console.log('업데이트가 가능합니다.');
+});
+
+autoUpdater.on("update-not-available", () => {
+  console.log("업데이트 불가");
+});
+
+autoUpdater.once("download-progress", () => {
+  console.log("설치 중");
+
+  progressBar = new ProgressBar({
+    text: "Download 합니다."
+  });
+
+  progressBar
+      .on("completed", () => {
+        console.log("설치 완료");
+      })
+      .on("aborted", () => {
+        console.log("aborted");
+      });
+});
+
+autoUpdater.on('update-downloaded', () => {
+  console.log('업데이트가 다운로드되었습니다.');
+  // 사용자에게 업데이트 설치 여부 확인
+  progressBar.setCompleted();
+  dialog.showMessageBox({
+    type: 'info',
+    title: '업데이트',
+    message: '새 버전이 다운로드되었습니다. 지금 설치하시겠습니까?',
+    buttons: ['예', '아니오']
+  }).then((result) => {
+    if (result.response === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
 });
 
 ipcMain.on('message', (event, message) => {
