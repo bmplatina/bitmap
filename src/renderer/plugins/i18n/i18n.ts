@@ -1,8 +1,8 @@
-import {createI18n} from "vue-i18n";
+import { createI18n, useI18n } from "vue-i18n";
 
 // Import Localization table
-import ko from "./locales/ko.json";
-import en from "./locales/en.json";
+import ko from "./ko.json";
+import en from "./en.json";
 
 const osLocale = navigator.language.split('-')[0];
 console.log("TargetLanguage: ", osLocale);
@@ -18,4 +18,4 @@ const i18n = createI18n({
     messages,
 });
 
-export default i18n;
+export { i18n, useI18n };

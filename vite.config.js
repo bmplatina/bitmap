@@ -2,6 +2,7 @@ const Path = require('path');
 const vuePlugin = require('@vitejs/plugin-vue')
 
 const { defineConfig } = require('vite');
+const path = require("node:path");
 
 /**
  * https://vitejs.dev/config
@@ -22,6 +23,7 @@ const config = defineConfig({
     resolve: {
         alias: {
             path: 'path-browserify',
+            '@': path.resolve(__dirname, 'src', 'renderer'),
         },
     },
     define: {

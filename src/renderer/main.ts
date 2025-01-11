@@ -3,42 +3,27 @@ import './style.css';
 import App from './App.vue';
 
 // Vuetify
-import { createVuetify } from "vuetify";
-import 'vuetify/styles';
-import { aliases, mdi } from "vuetify/iconsets/mdi";
-import * as components from 'vuetify/components';
-import * as directives from 'vuetify/directives';
+import vuetify from "./plugins/vuetify";
 
 // Date
 import dayjs from "dayjs";
 
 // i18n
-import i18n from "./i18n";
-import { useI18n } from "vue-i18n";
+import { i18n, useI18n } from "./plugins/i18n/i18n";
 
 // Lottie
 import Vue3Lottie from 'vue3-lottie';
 
-const vuetify = createVuetify({
-    icons: {
-        defaultSet: 'mdi',
-        aliases,
-        sets: { mdi },
-    },
-    theme: {
-        defaultTheme: 'dark',
-        themes: {
-            light: {
-                colors: {
-                    primary: '#6200EE',
-                    secondary: '#03DAC6',
-                }
-            }
-        }
-    },
-    components,
-    directives,
-});
+// vue-router
+import router from "./router";
+
+// webfont
+import { loadFonts } from "./plugins/webfontloader";
+
+// Store
+import store from "./plugins/store";
+
+loadFonts();
 
 const app = createApp(App);
 
@@ -53,4 +38,4 @@ app.config.globalProperties.$filters = {
     },
 };
 
-app.use(vuetify).use(i18n).use(Vue3Lottie, { name: "LottieAnimation"}).mount('#app');
+app.use(router).use(vuetify).use(i18n).use(Vue3Lottie, { name: "LottieAnimation"}).use(store).mount('#app');

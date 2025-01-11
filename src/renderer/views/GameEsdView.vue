@@ -2,7 +2,7 @@
 import { onMounted, reactive } from "vue";
 import axios from "axios";
 import { Game } from "../types/GameList"
-import GameEsdDetails from "./GameEsdDetails.vue";
+import GameEsdDetails from "../components/GameEsdDetails.vue";
 
 /*
  * Get API from server
