@@ -7,7 +7,7 @@ const props = defineProps<{
 
 <template>
   <v-navigation-drawer v-model="props.bIsOpened" temporary  :location="$vuetify.display.mobile ? 'bottom' : undefined">
-    <v-list>
+    <v-list class="text-left">
       <v-list-item link :title="$t('home')" prepend-icon="mdi-home" @click="$router.push('/')" />
       <v-divider />
       <v-list-item link :title="$t('games')" prepend-icon="mdi-gamepad" @click="$router.push('/games')" />

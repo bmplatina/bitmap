@@ -136,13 +136,25 @@ async function fetchGames() {
   }
 }
 
+let CurrentPlatform: string;
+
+async function GetPlatform() {
+  try {
+    CurrentPlatform = await window.electronAPI.getPlatform();
+  }
+  catch (error) {
+    console.error(error);
+  }
+}
+
 onMounted(() => {
   fetchGames();
+  GetPlatform();
 })
 </script>
 
 <template>
-  <div>
+  <v-container fluid class="text-left">
     <!-- Game ID -->
     <v-card :title="$t('gameId')" :text="$t('gameIdDesc')">
       <v-text-field v-model="responseGameId" readonly disabled :label="$t('gameId')"></v-text-field>
@@ -236,7 +248,7 @@ onMounted(() => {
     <v-dialog v-model="bIsPreSumbitPreviewModalOpened" width="40%" persistent>
       <v-card :title="$t('submitting') + responseGameTitle" :text="$t('submit-warning')">
         <v-divider />
-        <GameEsdDetails :gameObject="previewGameObject" />
+        <GameEsdDetails :gameObject="previewGameObject" :platform="CurrentPlatform" />
         <v-divider />
         <v-card-actions>
           <v-btn @click="postGame()" :text="$t('submit')" variant="tonal" color="primary" />
@@ -244,9 +256,15 @@ onMounted(() => {
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </v-container>
 </template>
 
 <style lang="postcss">
 @import 'md-editor-v3/lib/style.css';
+</style>
+
+<style scoped>
+*:focus {
+  outline: none;
+}
 </style>

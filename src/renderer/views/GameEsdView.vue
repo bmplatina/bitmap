@@ -70,4 +70,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
+*:focus {
+  outline: none;
+}
 </style>
