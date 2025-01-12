@@ -330,7 +330,7 @@ onMounted(() => {
         variant="tonal"
         outlined color="primary"
         @click="openInstallModal()"
-        v-if="InstallState === EInstallState.NotInstalled"
+        v-if="InstallState === EInstallState.NotInstalled && props.gameObject.isReleased"
         :disabled="!bIsPlatformCompatible"
       >{{ $t('install') }}</v-btn>
       <v-btn
@@ -419,7 +419,7 @@ onMounted(() => {
                 style="white-space: pre-line;"
             >
               <v-card-text>
-                <MdPreview :modelValue="gameObject.gameDescription" />
+                <MdPreview :modelValue="gameObject.gameDescription" theme="light" />
               </v-card-text>
             </v-card>
             <v-card
@@ -446,7 +446,7 @@ onMounted(() => {
             color="primary"
             flat
             @click="openInstallModal()"
-            v-if="InstallState === EInstallState.NotInstalled"
+            v-if="InstallState === EInstallState.NotInstalled && props.gameObject.isReleased"
             :disabled="!bIsPlatformCompatible"
         >{{ bIsPlatformCompatible ? $t('install') : $t('unsupported-platform') }}</v-btn>
         <v-btn
@@ -581,5 +581,10 @@ onMounted(() => {
 <style scoped>
 *:focus {
   outline: none;
+}
+
+.md-editor {
+  --md-color: #fff;
+  --md-bk-color: rgba(0, 0, 0, 0);
 }
 </style>
