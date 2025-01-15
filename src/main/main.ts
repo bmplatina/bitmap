@@ -23,8 +23,9 @@ let updaterIntervalId: NodeJS.Timeout;
 
 // Expose Window for Dialog Support
 let MAIN_WINDOW: BrowserWindow;
+let SETTINGS_WINDOW: BrowserWindow;
 
-function createWindow () {
+function createMainWindow () {
   const mainWindow = new BrowserWindow({
     title: "Bitmap",
     width: 1440,
@@ -55,7 +56,7 @@ function createWindow () {
 }
 
 app.whenReady().then(() => {
-  MAIN_WINDOW = createWindow();
+  MAIN_WINDOW = createMainWindow();
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -94,7 +95,7 @@ app.whenReady().then(() => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      createMainWindow();
     }
   });
 });
@@ -151,6 +152,29 @@ autoUpdater.on('update-downloaded', () => {
 ipcMain.on('message', (event, message) => {
   console.log(message);
 })
+
+// 신호등 버튼
+ipcMain.on('app-close', function (event) {
+  MAIN_WINDOW.close();
+});
+
+ipcMain.on('app-minimize', function (event) {
+  MAIN_WINDOW.minimize();
+});
+
+ipcMain.on('app-maximize', function (event) {
+  if(MAIN_WINDOW.isMaximized()) {
+    MAIN_WINDOW.restore();
+  }
+  else {
+    MAIN_WINDOW.maximize();
+  }
+
+});
+
+ipcMain.handle('is-maximized', (event) => {
+  return MAIN_WINDOW.isMaximized();
+});
 
 // 파일 경로 지정
 ipcMain.handle('show-dialog', async (event, options) => {

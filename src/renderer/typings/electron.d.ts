@@ -1,11 +1,17 @@
 import { GameInstallInfo } from "../types/GameInstallInfo";
 import Electron = require("electron");
+import {ipcRenderer} from "electron";
 
 /**
  * Should match main/preload.ts for typescript support in renderer
  */
 export default interface ElectronApi {
   sendMessage: (message: string) => void,
+
+  closeApp: () => void,
+  minimizeApp: () => void,
+  maximizeApp: () => void,
+  isMaximized: () => Promise<boolean>,
 
   showDialog: (options: Electron.OpenDialogOptions) => string,
 

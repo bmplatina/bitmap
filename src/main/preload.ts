@@ -1,8 +1,14 @@
-import { app, contextBridge, ipcRenderer, shell } from 'electron';
+import {app, contextBridge, ipcMain, ipcRenderer, shell} from 'electron';
 import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
 
 contextBridge.exposeInMainWorld('electronAPI', {
   sendMessage: (message: string) => ipcRenderer.send('message', message),
+
+  // Window buttons
+  closeApp: () => ipcRenderer.send('app-close'),
+  minimizeApp: () => ipcRenderer.send('app-minimize'),
+  maximizeApp: () => ipcRenderer.send('app-maximize'),
+  isMaximized: () => ipcRenderer.invoke('is-maximized'),
 
   // Show Directory or File selector
   showDialog: (options: Electron.OpenDialogOptions) => ipcRenderer.invoke('show-dialog', options),
