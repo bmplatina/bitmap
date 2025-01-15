@@ -31,10 +31,9 @@ function createWindow () {
     height: 900,
     minWidth: 1366,
     minHeight: 768,
-    // autoHideMenuBar: false,
-    fullscreenable: true,
-    // titleBarStyle: "hiddenInset",
-    frame: true /* platformName === 'darwin' */,
+    autoHideMenuBar: true,
+    titleBarStyle: "hiddenInset",
+    frame: false, // platformName === 'darwin',
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
       nodeIntegration: true,

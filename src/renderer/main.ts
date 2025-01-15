@@ -21,7 +21,7 @@ import router from "./router";
 import { loadFonts } from "./plugins/webfontloader";
 
 // Store
-import store from "./plugins/store";
+import { createPinia } from 'pinia'
 
 loadFonts();
 
@@ -38,4 +38,4 @@ app.config.globalProperties.$filters = {
     },
 };
 
-app.use(router).use(vuetify).use(i18n).use(Vue3Lottie, { name: "LottieAnimation"}).use(store).mount('#app');
+app.use(router).use(vuetify).use(i18n).use(Vue3Lottie, { name: "LottieAnimation"}).use(createPinia()).mount('#app');

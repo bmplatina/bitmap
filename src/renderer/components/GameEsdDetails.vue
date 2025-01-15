@@ -419,7 +419,7 @@ onMounted(() => {
                 style="white-space: pre-line;"
             >
               <v-card-text>
-                <MdPreview :modelValue="gameObject.gameDescription" theme="light" />
+                <MdPreview :modelValue="gameObject.gameDescription" theme="dark" />
               </v-card-text>
             </v-card>
             <v-card
@@ -584,7 +584,7 @@ onMounted(() => {
 }
 
 .md-editor {
-  --md-color: #fff;
+  /* --md-color: #fff; */
   --md-bk-color: rgba(0, 0, 0, 0);
 }
 </style>

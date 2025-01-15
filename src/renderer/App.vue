@@ -37,12 +37,12 @@ window.electronAPI.sendMessage('Hello from App.vue!');
 
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark fixed class="text-left">
-      <v-app-bar-nav-icon @click="toggleSidebarOpenState()" />
-      <v-toolbar-title class="bitmap-title">{{ $t('bitmap-store') }}</v-toolbar-title>
+    <v-app-bar app color="primary" dark fixed density="compact" class="text-left" style="-webkit-app-region: drag;">
+<!--      <v-app-bar-nav-icon @click="toggleSidebarOpenState()" style="-webkit-app-region: no-drag; margin-left: 70px" />-->
+      <v-toolbar-title class="bitmap-title" style="margin-left: 80px">{{ $t('bitmap-store') }}</v-toolbar-title>
       <!-- 우측에 추가메뉴 아이콘을 넣기 위해 v-spacer 엘리먼트 사용 -->
       <v-spacer></v-spacer>
-      <v-btn icon @click="toggleLanguage()">
+      <v-btn icon @click="toggleLanguage()" style="-webkit-app-region: no-drag;">
         {{ $filters.getLanguage() }}
         <!--          <v-icon>mdi-dots-vertical</v-icon>-->
       </v-btn>

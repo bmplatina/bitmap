@@ -6,7 +6,12 @@ const props = defineProps<{
 </script>
 
 <template>
-  <v-navigation-drawer v-model="props.bIsOpened" temporary :location="$vuetify.display.mobile ? 'bottom' : undefined">
+<!--  <v-navigation-drawer v-model="props.bIsOpened" temporary :location="$vuetify.display.mobile ? 'bottom' : undefined">-->
+  <v-navigation-drawer
+      expand-on-hover
+      rail
+      :location="$vuetify.display.mobile ? 'bottom' : undefined"
+  >
     <v-list class="text-left">
       <v-list-item link :title="$t('home')" prepend-icon="mdi-home" @click="$router.push('/')" />
       <v-divider />
@@ -21,5 +26,4 @@ const props = defineProps<{
 </template>
 
 <style scoped>
-
 </style>
