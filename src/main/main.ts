@@ -34,9 +34,16 @@ function createMainWindow () {
     minWidth: 1366,
     minHeight: 768,
     autoHideMenuBar: true,
-    titleBarStyle: "hiddenInset",
-    trafficLightPosition: {x: 17, y: 16 },
-    ...(platformName !== 'darwin' ? { titleBarOverlay: true} : {}),
+    titleBarStyle: "hidden",
+    trafficLightPosition: {
+      x: 17,
+      y: 16
+    },
+    titleBarOverlay: {
+      height: 48,
+      color: '#00000000',
+      symbolColor: '#FFFFFFFF'
+    },
     frame: false, // platformName === 'darwin',
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
