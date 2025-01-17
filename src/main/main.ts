@@ -18,6 +18,7 @@ const gameInstallInfoDb = new Datastore({ filename: dbPath, autoload: true });
 // Auto updater
 import { autoUpdater } from "electron-updater";
 import ProgressBar from "electron-progressbar";
+import {tr} from "vuetify/locale";
 let progressBar: ProgressBar;
 let updaterIntervalId: NodeJS.Timeout;
 
@@ -34,6 +35,8 @@ function createMainWindow () {
     minHeight: 768,
     autoHideMenuBar: true,
     titleBarStyle: "hiddenInset",
+    trafficLightPosition: {x: 17, y: 16 },
+    ...(platformName !== 'darwin' ? { titleBarOverlay: true} : {}),
     frame: false, // platformName === 'darwin',
     webPreferences: {
       preload: join(__dirname, 'preload.js'),

@@ -376,7 +376,7 @@ onMounted(() => {
         <v-divider vertical style="margin-top: 12px; margin-bottom: 12px"></v-divider>
 
         <v-col cols="9" style="display: flex; flex-direction: column; height: 100%;" class="align-center">
-          <div style="flex: 1; overflow-y: auto; margin-top: 4%; margin-bottom: 1%; margin-left: 4%; margin-right: 4%;">
+          <div style="flex: 1; overflow-y: auto; margin-left: 4%; margin-right: 4%;">
             <v-card
                 class="mt-4 pa-3 rounded-xl"
                 :title="$t('preview')"

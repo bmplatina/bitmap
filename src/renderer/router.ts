@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 // import HomeView from "../views/HomeView.vue";
-import GameEsd from "./views/GameEsdView.vue";
-import GameEsdSubmit from "./views/GameEsdSubmit.vue";
-import GameEsdPending from "./views/GameEsdPending.vue";
 
 const routes: Array<RouteRecordRaw> = [
     // {
@@ -22,17 +19,22 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: "/games",
         name: "games",
-        component: GameEsd,
+        component: ()=> import("./views/GameEsdView.vue"),
     },
     {
         path: "/games/submit",
         name: "submit",
-        component: GameEsdSubmit,
+        component: () => import("./views/GameEsdSubmit.vue"),
     },
     {
         path: "/games/pending",
         name: "pending",
-        component: GameEsdPending,
+        component: () => import("./views/GameEsdPending.vue"),
+    },
+    {
+        path: "/settings",
+        name: "settings",
+        component: () => import("./views/Settings.vue"),
     }
 ];
 

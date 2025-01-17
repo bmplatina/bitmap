@@ -2,7 +2,6 @@
 const props = defineProps<{
   bIsOpened: boolean,
 }>();
-
 </script>
 
 <template>
@@ -10,7 +9,6 @@ const props = defineProps<{
   <v-navigation-drawer
       expand-on-hover
       rail
-      :location="$vuetify.display.mobile ? 'bottom' : undefined"
   >
     <v-list class="text-left">
       <v-list-item link :title="$t('home')" prepend-icon="mdi-home" @click="$router.push('/')" />
@@ -20,7 +18,7 @@ const props = defineProps<{
       <v-list-item link :title="$t('games-pending')" prepend-icon="mdi-account-clock-outline" @click="$router.push('/games/pending')" />
       <v-divider />
       <v-list-item link :title="$t('accounts')" prepend-icon="mdi-account" @click="$router.push('/')" disabled />
-      <v-list-item link :title="$t('settings')" prepend-icon="mdi-cog" @click="$router.push('/')" disabled />
+      <v-list-item link :title="$t('settings')" prepend-icon="mdi-cog" @click="$router.push('/settings')" />
     </v-list>
   </v-navigation-drawer>
 </template>

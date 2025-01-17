@@ -1,6 +1,7 @@
 {
   "bitmap": "Bitmap",
   "bitmap-store": "Bitmap Store",
+  "store": "Store",
   "about": "About Bitmap Store",
 
   "home": "Home",
