@@ -4,11 +4,6 @@ import { Vue3Lottie } from "vue3-lottie";
 import BitmapIntro from "./assets/lottie_BitmapBaseIntro.json";
 import Sidebar from "./components/Sidebar.vue";
 
-const bIsSidebarOpened = ref(false);
-const toggleSidebarOpenState = () => {
-  bIsSidebarOpened.value = !bIsSidebarOpened.value;
-};
-
 let CurrentPlatform = ref<string>('');
 
 async function GetPlatform() {
@@ -21,16 +16,18 @@ async function GetPlatform() {
 }
 
 const titleMargin = ref({
-  marginLeft: '95px'
+  transform: 'translateX(75px)',
+  willChange: 'transform',
+  transition: 'transform 0.5s ease 0.05s'
 });
 
 const handleFullscreenChange = (newFullscreenState: boolean) => {
   // macOS && !Fullscreen => 95
   if(CurrentPlatform.value === 'darwin' && !newFullscreenState) {
-    titleMargin.value.marginLeft = '95px'
+    titleMargin.value.transform = 'translateX(79px)'
   }
   else {
-    titleMargin.value.marginLeft = '16px'
+    titleMargin.value.transform = 'translateX(0px)'
   }
 };
 
@@ -47,16 +44,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <v-app data-app class="full-width">
-    <v-app-bar app color="primary" dark fixed density="compact" class="text-left" style="-webkit-app-region: drag;" scroll-target="#main-content">
+  <v-app data-app>
+    <v-app-bar app color="primary" dark fixed density="compact" class="text-left" style="-webkit-app-region: drag;">
 <!--      <v-app-bar-nav-icon @click="toggleSidebarOpenState()" style="-webkit-app-region: no-drag; margin-left: 70px" />-->
       <v-toolbar-title :text="$t('bitmap')" :style="titleMargin" />
       <!-- 우측에 추가메뉴 아이콘을 넣기 위해 v-spacer 엘리먼트 사용 -->
       <v-spacer></v-spacer>
     </v-app-bar>
 
-    <v-main fill-width id="main-content" style="height: calc(100vh - 48px); overflow-y: auto;">
-      <Sidebar :bIsOpened="bIsSidebarOpened" />
+    <v-main fill-width fluid>
+      <Sidebar />
       <router-view />
       <!--        <Vue3Lottie-->
       <!--            :animationData="BitmapIntro"-->
@@ -71,14 +68,6 @@ onUnmounted(() => {
 <style>
 *:focus {
   outline: none;
-}
-
-.title-margin-macOS {
-  margin-left: 95px;
-}
-
-.title-margin-fullscreen {
-  margin-left: 0;
 }
 </style>
 

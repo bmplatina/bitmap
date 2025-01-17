@@ -19,7 +19,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: "/games",
         name: "games",
-        component: ()=> import("./views/GameEsdView.vue"),
+        component: () => import("./views/GameEsdView.vue"),
     },
     {
         path: "/games/submit",
