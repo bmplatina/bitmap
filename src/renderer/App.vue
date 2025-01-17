@@ -20,17 +20,15 @@ async function GetPlatform() {
   }
 }
 
-const titleMargin = ref({
-  marginLeft: '95px'
-});
+const titleMarginLeft = ref('');
 
 const handleFullscreenChange = (newFullscreenState: boolean) => {
   // macOS && !Fullscreen => 95
   if(CurrentPlatform.value === 'darwin' && !newFullscreenState) {
-    titleMargin.value.marginLeft = '95px'
+    titleMarginLeft.value = '95px'
   }
   else {
-    titleMargin.value.marginLeft = '16px'
+    titleMarginLeft.value = '16px'
   }
 };
 
@@ -50,7 +48,7 @@ onUnmounted(() => {
   <v-app data-app class="full-width">
     <v-app-bar app color="primary" dark fixed density="compact" class="text-left" style="-webkit-app-region: drag;" scroll-target="#main-content">
 <!--      <v-app-bar-nav-icon @click="toggleSidebarOpenState()" style="-webkit-app-region: no-drag; margin-left: 70px" />-->
-      <v-toolbar-title :text="$t('bitmap')" :style="titleMargin" />
+      <v-toolbar-title :text="$t('bitmap')" :style="{ marginLeft: titleMarginLeft }" />
       <!-- 우측에 추가메뉴 아이콘을 넣기 위해 v-spacer 엘리먼트 사용 -->
       <v-spacer></v-spacer>
     </v-app-bar>
