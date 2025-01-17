@@ -1,54 +1,61 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { Vue3Lottie } from "vue3-lottie";
 import BitmapIntro from "./assets/lottie_BitmapBaseIntro.json";
-import { useI18n } from "vue-i18n";
-import GameEsdView from "./views/GameEsdView.vue";
 import Sidebar from "./components/Sidebar.vue";
-import { useLocale } from "vuetify";
-
-const { current } = useLocale();
-const { locale, t } = useI18n();
-
-const changeLanguage = (newLocale: string) => {
-  if(newLocale === 'ko' || newLocale === 'en') {
-    locale.value = newLocale;
-  }
-}
-
-const toggleLanguage = () => {
-  if(locale.value === 'ko') {
-    locale.value = 'en';
-    current.value = 'en';
-  }
-  else if(locale.value === 'en') {
-    locale.value = 'ko';
-    current.value = 'ko';
-  }
-};
 
 const bIsSidebarOpened = ref(false);
 const toggleSidebarOpenState = () => {
   bIsSidebarOpened.value = !bIsSidebarOpened.value;
 };
 
+let CurrentPlatform = ref<string>('');
+
+async function GetPlatform() {
+  try {
+    CurrentPlatform.value = await window.electronAPI.getPlatform();
+  }
+  catch (error) {
+    console.error(error);
+  }
+}
+
+const titleMargin = ref({
+  marginLeft: '95px'
+});
+
+const handleFullscreenChange = (newFullscreenState: boolean) => {
+  // macOS && !Fullscreen => 95
+  if(CurrentPlatform.value === 'darwin' && !newFullscreenState) {
+    titleMargin.value.marginLeft = '95px'
+  }
+  else {
+    titleMargin.value.marginLeft = '16px'
+  }
+};
+
 window.electronAPI.sendMessage('Hello from App.vue!');
+
+onMounted(() => {
+  GetPlatform();
+  window.electronAPI.onFullscreenChange(handleFullscreenChange);
+});
+
+onUnmounted(() => {
+  window.electronAPI.removeFullscreenListener();
+});
 </script>
 
 <template>
-  <v-app>
-    <v-app-bar app color="primary" dark fixed density="compact" class="text-left" style="-webkit-app-region: drag;">
+  <v-app data-app class="full-width">
+    <v-app-bar app color="primary" dark fixed density="compact" class="text-left" style="-webkit-app-region: drag;" scroll-target="#main-content">
 <!--      <v-app-bar-nav-icon @click="toggleSidebarOpenState()" style="-webkit-app-region: no-drag; margin-left: 70px" />-->
-      <v-toolbar-title class="bitmap-title" style="margin-left: 95px">{{ $t('bitmap-store') }}</v-toolbar-title>
+      <v-toolbar-title :text="$t('bitmap')" :style="titleMargin" />
       <!-- 우측에 추가메뉴 아이콘을 넣기 위해 v-spacer 엘리먼트 사용 -->
       <v-spacer></v-spacer>
-      <v-btn icon @click="toggleLanguage()" style="-webkit-app-region: no-drag;">
-        {{ $filters.getLanguage() }}
-        <!--          <v-icon>mdi-dots-vertical</v-icon>-->
-      </v-btn>
     </v-app-bar>
 
-    <v-main fill-width>
+    <v-main fill-width id="main-content" style="height: calc(100vh - 48px); overflow-y: auto;">
       <Sidebar :bIsOpened="bIsSidebarOpened" />
       <router-view />
       <!--        <Vue3Lottie-->
@@ -61,9 +68,17 @@ window.electronAPI.sendMessage('Hello from App.vue!');
   </v-app>
 </template>
 
-<style scoped>
+<style>
 *:focus {
   outline: none;
+}
+
+.title-margin-macOS {
+  margin-left: 95px;
+}
+
+.title-margin-fullscreen {
+  margin-left: 0;
 }
 </style>
 

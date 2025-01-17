@@ -101,8 +101,15 @@
   "filter": "Filter",
   "delete": "Delete",
   "open": "Open",
+  "apply": "Apply",
 
-  "biitmap-server-inaccessible": "Bitmap Store couldn't reach to server. Please check your internet connection.",
+  "bitmap-server-inaccessible": "Bitmap Store couldn't reach to server. Please check your internet connection.",
   "data-not-processable": "Bitmap Store couldn't process the data.",
-  "decode-failed": "Bitmap Store couldn't interpret the data from server."
+  "decode-failed": "Bitmap Store couldn't interpret the data from server.",
+
+  "settings-general": "General Settings",
+  "screen-mode": "Screen Mode",
+  "screen-mode-dark": "Dark Mode",
+  "screen-mode-light": "Light Mode",
+  "screen-mode-system-default": "Auto"
 }

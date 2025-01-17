@@ -6,25 +6,27 @@ import axios from 'axios';
 import unzipper from 'unzipper';
 import { exec } from "node:child_process";
 import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
+import { Settings } from "../renderer/types/Settings";
 
 // Platform
 const platformName: string = process.platform;
 const bIsDev: boolean = process.env.NODE_ENV === 'development';
 
 // Parameter saver
-const dbPath: string = bIsDev ? './gameInstallInfo.db' : join(app.getPath('userData'), 'gameInstallInfo.db');
-const gameInstallInfoDb = new Datastore({ filename: dbPath, autoload: true });
+const gameInstallInfoDbPath: string = bIsDev ? './gameInstallInfo.db' : join(app.getPath('userData'), 'gameInstallInfo.db');
+const gameInstallInfoDb = new Datastore({ filename: gameInstallInfoDbPath, autoload: true });
+
+const settingsDbPath: string = bIsDev ? './settings.db' : join(app.getPath('userData'), 'settings.db');
+const settingsDb = new Datastore({ filename: settingsDbPath, autoload: true });
 
 // Auto updater
 import { autoUpdater } from "electron-updater";
 import ProgressBar from "electron-progressbar";
-import {tr} from "vuetify/locale";
 let progressBar: ProgressBar;
 let updaterIntervalId: NodeJS.Timeout;
 
 // Expose Window for Dialog Support
 let MAIN_WINDOW: BrowserWindow;
-let SETTINGS_WINDOW: BrowserWindow;
 
 function createMainWindow () {
   const mainWindow = new BrowserWindow({
@@ -92,6 +94,15 @@ app.whenReady().then(() => {
     }
   });
 
+  // 전체 화면일 때 margin-left 설정을 위한 이벤트
+  MAIN_WINDOW.on('enter-full-screen', () => {
+    MAIN_WINDOW.webContents.send('fullscreen-change', true);
+  });
+
+  MAIN_WINDOW.on('leave-full-screen', () => {
+    MAIN_WINDOW.webContents.send('fullscreen-change', false);
+  });
+
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -116,7 +127,7 @@ app.on('window-all-closed', function () {
 
 app.on('will-quit', function () {
   clearInterval(updaterIntervalId);
-})
+});
 
 // Updater events
 autoUpdater.on('update-available', () => {
@@ -383,6 +394,33 @@ ipcMain.handle('game-install-info-update', (event, gameIdIndex: number, gameInst
       }
     });
   })
+});
+
+// Settings
+ipcMain.handle('settings-update', (event, NewSettings: Settings) => {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(settingsDbPath, JSON.stringify(NewSettings, null, 2), (err) => {
+      if (err) {
+        reject(err);
+      }
+      else {
+        resolve(NewSettings);
+      }
+    })
+  });
+});
+
+ipcMain.handle('settings-get', (event, NewSettings: Settings) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(settingsDbPath, 'utf8', (err, data) => {
+      if (err) {
+        reject(err);
+      }
+      else {
+        resolve(JSON.parse(data));
+      }
+    })
+  });
 });
 
 ipcMain.handle('get-electron-appdata-path', async (event): Promise<string> => {

@@ -4,6 +4,14 @@ import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
 contextBridge.exposeInMainWorld('electronAPI', {
   sendMessage: (message: string) => ipcRenderer.send('message', message),
 
+  // On Fullscreen
+  onFullscreenChange: (callback) => {
+    ipcRenderer.on('fullscreen-change', (event, fullscreenState: boolean) => callback(fullscreenState));
+  },
+  removeFullscreenListener: () => {
+    ipcRenderer.removeAllListeners('fullscreen-change');
+  },
+
   // Window buttons
   closeApp: () => ipcRenderer.send('app-close'),
   minimizeApp: () => ipcRenderer.send('app-minimize'),

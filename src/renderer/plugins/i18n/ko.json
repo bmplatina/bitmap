@@ -101,8 +101,15 @@
   "filter": "필터",
   "delete": "삭제",
   "open": "열기",
+  "apply": "적용",
 
-  "biitmap-server-inaccessible": "서버에 접근할 수 없습니다. 인터넷 연결을 확인하십시오.",
+  "bitmap-server-inaccessible": "서버에 접근할 수 없습니다. 인터넷 연결을 확인하십시오.",
   "data-not-processable": "데이터를 처리하지 못했습니다.",
-  "decode-failed": "서버의 값을 처리하지 못했습니다."
+  "decode-failed": "서버의 값을 처리하지 못했습니다.",
+
+  "settings-general": "일반 설정",
+  "screen-mode": "화면 모드",
+  "screen-mode-dark": "다크 모드",
+  "screen-mode-light": "라이트 모드",
+  "screen-mode-system-default": "자동"
 }

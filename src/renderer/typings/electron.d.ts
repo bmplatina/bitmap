@@ -8,6 +8,9 @@ import {ipcRenderer} from "electron";
 export default interface ElectronApi {
   sendMessage: (message: string) => void,
 
+  onFullscreenChange: (callback: (fullscreenState: boolean) => void) => void,
+  removeFullscreenListener: () => void,
+
   closeApp: () => void,
   minimizeApp: () => void,
   maximizeApp: () => void,
