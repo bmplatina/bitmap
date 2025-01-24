@@ -15,6 +15,16 @@
   "projects": "Project Files",
   "settings": "Settings",
 
+  "login": "Sign in",
+  "register": "Sign up",
+  "id": "Username",
+  "email": "Email",
+  "password": "Password",
+  "again": "(Type again)",
+  "password-rules": "At least 8 characters",
+  "agree-terms": "I have agreed to Bitmap Production's Terms and Conditions of Use.",
+  "agree-terms-link": "See Bitmap Production's Terms and Conditions of Use and Privacy Policy here.",
+
   "explore": "Explore",
   "details": "Details",
   "dev": "Dev",

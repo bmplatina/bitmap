@@ -1,18 +1,21 @@
-import { app, BrowserWindow, ipcMain, session, dialog } from 'electron';
-import Datastore from 'nedb';
+import { app, BrowserWindow, dialog, ipcMain, session, net } from 'electron';
+
 import { join, dirname, extname } from 'path';
 import * as fs from 'fs';
 import axios from 'axios';
 import unzipper from 'unzipper';
-import { exec } from "node:child_process";
-import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
-import { Settings } from "../renderer/types/Settings";
+import { exec } from "child_process";
+
 
 // Platform
 const platformName: string = process.platform;
 const bIsDev: boolean = process.env.NODE_ENV === 'development';
 
 // Parameter saver
+import Datastore from 'nedb';
+import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
+import { Settings } from "../renderer/types/Settings";
+
 const gameInstallInfoDbPath: string = bIsDev ? './gameInstallInfo.db' : join(app.getPath('userData'), 'gameInstallInfo.db');
 const gameInstallInfoDb = new Datastore({ filename: gameInstallInfoDbPath, autoload: true });
 
@@ -52,8 +55,15 @@ function createMainWindow () {
       nodeIntegration: true,
       contextIsolation: true,
       webviewTag: true,
+      webSecurity: !bIsDev,
       devTools: bIsDev
     }
+  });
+
+  // CORS 우회 설정
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    details.requestHeaders['Origin'] = '*'; // 모든 요청을 허용하도록 변경
+    callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
 
   if (bIsDev) {
@@ -69,6 +79,14 @@ function createMainWindow () {
 
 app.whenReady().then(() => {
   MAIN_WINDOW = createMainWindow();
+
+  app.setAboutPanelOptions({
+    applicationName: "Bitmap",
+    applicationVersion: app.getVersion(),
+    copyright: "© 2025 Platina and Bitmap Production",
+    version: app.getVersion(),
+    website: "https://www.prodbybitmap.com",
+  })
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -397,32 +415,83 @@ ipcMain.handle('game-install-info-update', (event, gameIdIndex: number, gameInst
 });
 
 // Settings
-ipcMain.handle('settings-update', (event, NewSettings: Settings) => {
+ipcMain.handle('settings-update', (event, newSettings: Settings) => {
   return new Promise((resolve, reject) => {
-    fs.writeFile(settingsDbPath, JSON.stringify(NewSettings, null, 2), (err) => {
+    settingsDb.update({ id: 0 }, { $set: newSettings }, { upsert: true }, function (err, numReplaced) {
       if (err) {
         reject(err);
+      } else {
+        settingsDb.loadDatabase();
+        resolve(numReplaced);
       }
-      else {
-        resolve(NewSettings);
-      }
-    })
-  });
+    });
+  })
 });
 
-ipcMain.handle('settings-get', (event, NewSettings: Settings) => {
+ipcMain.handle('settings-get', (event) => {
   return new Promise((resolve, reject) => {
-    fs.readFile(settingsDbPath, 'utf8', (err, data) => {
+    settingsDb.findOne({ id: 0 }, (err, docs: GameInstallInfo) => {
       if (err) {
+        console.error(err);
         reject(err);
-      }
-      else {
-        resolve(JSON.parse(data));
+      } else {
+        console.log("GetByIndex Succeed: ", typeof docs, docs);
+        resolve(docs);
       }
     })
-  });
+  })
 });
 
 ipcMain.handle('get-electron-appdata-path', async (event): Promise<string> => {
   return app.getPath('userData');
 })
+
+// 🟢 로그인 처리 핸들러
+ipcMain.handle("login", async (event, username, password) => {
+  const apiUrl = "https://wiki.prodbybitmap.com/w/api.php";
+
+  try {
+    // 1. CSRF 로그인 토큰 가져오기
+    const tokenRes = await session.defaultSession.fetch(`${apiUrl}?action=query&meta=tokens&type=login&format=json`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    // 2. 쿠키 확인
+    const cookies = await session.defaultSession.cookies.get({ url: apiUrl });
+    console.log("저장된 쿠키:", cookies);
+
+    const tokenData = await tokenRes.json();
+    const loginToken = tokenData?.query?.tokens?.logintoken;
+    console.log("로그인 토큰:", loginToken);
+
+    if (!loginToken) throw new Error("CSRF 로그인 토큰을 가져올 수 없습니다.");
+
+    // 2. 로그인 요청
+    const loginRes = await session.defaultSession.fetch(apiUrl, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        action: "login",
+        format: "json",
+        lgname: username,
+        lgpassword: password,
+        lgtoken: loginToken,
+      }),
+    });
+
+    const loginData = await loginRes.json();
+    console.log("로그인 응답:", loginData);
+
+    if (loginData?.login?.result === "Success") {
+      console.log("로그인 성공! 🎉");
+      return { success: true, username };
+    } else {
+      return { success: false, error: loginData };
+    }
+  } catch (error: any) {
+    console.error("로그인 에러:", error);
+    return { success: false, error: error.message };
+  }
+});

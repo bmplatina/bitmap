@@ -17,7 +17,6 @@ const changeScreenMode = () => {
     theme.global.name.value = screenMode.value;
   }
   else {
-
   }
 }
 

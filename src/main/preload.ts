@@ -1,5 +1,7 @@
-import {app, contextBridge, ipcMain, ipcRenderer, shell} from 'electron';
+import { contextBridge, ipcRenderer, shell } from 'electron';
+
 import { GameInstallInfo } from "../renderer/types/GameInstallInfo";
+import { Settings } from "../renderer/types/Settings";
 
 contextBridge.exposeInMainWorld('electronAPI', {
   sendMessage: (message: string) => ipcRenderer.send('message', message),
@@ -60,9 +62,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // electron-store:update
   updateGameInstallInfo: (gameIdIndex: number, gameInstallInfo: GameInstallInfo) => ipcRenderer.invoke('game-install-info-update', gameIdIndex, gameInstallInfo),
 
+  updateSettings: (newSettings: Settings) => ipcRenderer.invoke('settings-update', newSettings),
+
+  getSettings: () => ipcRenderer.invoke('settings-get'),
+
   // Check is game path valid
   checkPathValid: (dirPath: string) => ipcRenderer.invoke('check-executable-or-app', dirPath),
 
   // Get Application Stored Path
   getElectronStoredPath: () => ipcRenderer.invoke('get-electron-appdata-path'),
+
+  // Auth:Login
+  login: (username: string, password: string) => ipcRenderer.invoke('login', username, password),
 });

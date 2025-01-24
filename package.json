@@ -18,7 +18,9 @@
   "devDependencies": {
     "@intlify/vue-i18n-loader": "^4.2.0",
     "@types/electron": "^1.6.12",
+    "@types/nedb": "^1.8.16",
     "@types/node": "^22.10.3",
+    "@types/unzipper": "^0.10.10",
     "@types/vue-i18n": "^7.0.0",
     "@types/webfontloader": "^1.6.38",
     "@vitejs/plugin-vue": "^4.4.1",

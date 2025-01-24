@@ -1,6 +1,7 @@
 import { GameInstallInfo } from "../types/GameInstallInfo";
 import Electron = require("electron");
 import {ipcRenderer} from "electron";
+import {Settings} from "../types/Settings";
 
 /**
  * Should match main/preload.ts for typescript support in renderer
@@ -37,9 +38,14 @@ export default interface ElectronApi {
   deleteGameInstallInfo: (gameIdIndex: number) => Promise<any>,
   updateGameInstallInfo: (gameIdIndex: number, gameInstallInfo: GameInstallInfo) => Promise<any>,
 
+  updateSettings: (newSettings: Settings) => Promise<any>,
+  getSettings: () => Promise<any>,
+
   checkPathValid: (dirPath: string) => Promise<boolean>,
 
   getElectronStoredPath: () => Promise<string>,
+
+  login: (username: string, password: string) => Promise<any>,
 }
 
 declare global {
