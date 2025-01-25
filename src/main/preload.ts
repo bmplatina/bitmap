@@ -72,6 +72,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Get Application Stored Path
   getElectronStoredPath: () => ipcRenderer.invoke('get-electron-appdata-path'),
 
-  // Auth:Login
+  // Auth
   login: (username: string, password: string) => ipcRenderer.invoke('login', username, password),
+  register: (username: string, email: string, password: string) => ipcRenderer.invoke('register', username, email, password),
+  getCookies: (cookieName: string) => ipcRenderer.invoke('get-cookies', cookieName),
 });

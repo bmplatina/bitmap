@@ -46,6 +46,8 @@ export default interface ElectronApi {
   getElectronStoredPath: () => Promise<string>,
 
   login: (username: string, password: string) => Promise<any>,
+  register: (username: string, email: string, password: string) => Promise<boolean>,
+  getCookies: (cookieName: string) => Promise<string>,
 }
 
 declare global {

@@ -6,7 +6,6 @@ import axios from 'axios';
 import unzipper from 'unzipper';
 import { exec } from "child_process";
 
-
 // Platform
 const platformName: string = process.platform;
 const bIsDev: boolean = process.env.NODE_ENV === 'development';
@@ -495,3 +494,64 @@ ipcMain.handle("login", async (event, username, password) => {
     return { success: false, error: error.message };
   }
 });
+
+ipcMain.handle("register", async (event, username: string, email: string, password: string) => {
+  const apiUrl = "https://wiki.prodbybitmap.com/w/api.php";
+
+  // 1. CSRF 토큰 가져오기
+  const tokenRes = await session.defaultSession.fetch(`${apiUrl}?action=query&meta=tokens&type=createaccount&format=json`, {
+    method: "GET",
+    credentials: "include", // 쿠키 필요 시
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const tokenData = await tokenRes.json();
+  const csrfToken = tokenData?.query?.tokens?.createaccounttoken;
+
+  if (!csrfToken) {
+    throw new Error("CSRF 토큰을 가져올 수 없습니다.");
+  }
+
+  // 2. 계정 생성 요청
+  const accountRes = await session.defaultSession.fetch(apiUrl, {
+    method: "POST",
+    credentials: "include", // 쿠키 필요 시
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      action: "createaccount",
+      format: "json",
+      username: username,
+      password: password,
+      retype: password,
+      email: email,
+      createreturnurl: "https://wiki.prodbybitmap.com/",
+      token: csrfToken,
+    }),
+  });
+
+  const accountData = await accountRes.json();
+
+  if (accountData?.createaccount?.status === "PASS") {
+    console.log("계정이 성공적으로 생성되었습니다:", accountData.createaccount.username);
+    return true;
+  } else {
+    console.error("계정 생성 실패:", accountData);
+    return false;
+  }
+});
+
+ipcMain.handle("get-cookies", async (event, cookieName: string) => {
+  try {
+    const url = "https://wiki.prodbybitmap.com/w/api.php";
+    const cookies = await session.defaultSession.cookies.get({ url });
+    const cookie = cookies.find(c => c.name === cookieName);
+    return cookie ? cookie.value : null;
+  } catch (error) {
+    console.error('쿠키 가져오기 실패:', error);
+    return null;
+  }
+})

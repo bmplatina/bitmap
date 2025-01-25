@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from 'vue-i18n';
 
@@ -27,9 +27,11 @@ async function login(username: string, password: string) {
     const result = await window.electronAPI.login(username, password);
     if (result.success) {
       console.log("로그인 성공:", result.username);
+      bIsLoggedIn.value = true;
     }
     else {
       console.error("로그인 실패:", result.error);
+      bIsLoggedIn.value = false;
     }
   }
   catch (error) {
@@ -37,53 +39,32 @@ async function login(username: string, password: string) {
   }
 }
 
-async function createAccount() {
-  const apiUrl = "https://wiki.prodbybitmap.com/w/api.php";
-
-  // 1. CSRF 토큰 가져오기
-  const tokenRes = await fetch(`${apiUrl}?action=query&meta=tokens&type=createaccount&format=json`, {
-    method: "GET",
-    credentials: "include", // 쿠키 필요 시
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  const tokenData = await tokenRes.json();
-  const csrfToken = tokenData?.query?.tokens?.createaccounttoken;
-
-  if (!csrfToken) {
-    throw new Error("CSRF 토큰을 가져올 수 없습니다.");
+async function createAccount(username: string, email: string, password: string) {
+  try {
+    const result = await window.electronAPI.register(username, email, password);
+    if (result) {
+      console.log("로그인 성공");
+      await login(username, password);
+    }
+    else {
+      console.error("로그인 실패");
+      bIsLoggedIn.value = false;
+    }
   }
-
-  // 2. 계정 생성 요청
-  const accountRes = await fetch(apiUrl, {
-    method: "POST",
-    credentials: "include", // 쿠키 필요 시
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      action: "createaccount",
-      format: "json",
-      username: username.value,
-      password: password.value,
-      retype: password.value,
-      email: email.value,
-      createreturnurl: "https://wiki.prodbybitmap.com/",
-      token: csrfToken,
-    }),
-  });
-
-  const accountData = await accountRes.json();
-
-  if (accountData?.createaccount?.status === "PASS") {
-    console.log("계정이 성공적으로 생성되었습니다:", accountData.createaccount.username);
-  } else {
-    console.error("계정 생성 실패:", accountData);
+  catch (error) {
+    console.error("IPC 로그인 요청 실패:", error);
   }
 }
 
+
+onMounted(() => {
+  window.electronAPI.getCookies('overwikiToken').then((res) => {
+    if(!!res) bIsLoggedIn.value = true;
+  });
+  window.electronAPI.getCookies('overwikiUserName').then((res) => {
+    console.log(res);
+  });
+});
 </script>
 
 <template>
