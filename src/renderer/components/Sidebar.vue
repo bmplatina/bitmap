@@ -4,21 +4,28 @@ import { useRouter } from "vue-router";
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from "../plugins/store";
 import { storeToRefs } from "pinia";
+import {Game} from "../types/GameList";
 
 const router = useRouter();
 const { t } = useI18n();
 const authStore = useAuthStore();
 const { userName, userId, bIsLoggedIn } = storeToRefs(authStore);
 
-router.push("/games");
-
 const bIsSignInModalOpened = ref(false);
+const bIsRegistering = ref(false);
 
 const username = ref('');
 const email = ref('');
 const password = ref('');
 const bShowPassword = ref(false);
 const bIsTermsAgreed = ref(false);
+
+const authFailedReasons = reactive({
+  bIsFailed: false,
+  result: '',
+  reason: '',
+});
+
 const passwordRules = {
   required: (value: string) => !!value || 'Required.',
   min: (v: string) => v.length >= 8 || t('password-rules'),
@@ -45,10 +52,14 @@ async function login(username: string, password: string) {
       });
 
       bIsSignInModalOpened.value = false;
+      authFailedReasons.bIsFailed = false;
     }
     else {
       console.error("로그인 실패:", result.error);
       bIsLoggedIn.value = false;
+      authFailedReasons.bIsFailed = true;
+      authFailedReasons.result = result.error.login.result;
+      authFailedReasons.reason = result.error.login.reason;
     }
   }
   catch (error) {
@@ -75,10 +86,10 @@ async function createAccount(username: string, email: string, password: string) 
 
 onMounted(() => {
   window.electronAPI.getCookies('overwikiToken').then((res) => {
-    bIsLoggedIn.value = !!res;
+    bIsLoggedIn.value = res.length > 5;
   });
   window.electronAPI.getCookies('overwikiUserName').then((res) => {
-    console.log(res);
+    userName.value = res;
   });
 });
 </script>
@@ -89,21 +100,21 @@ onMounted(() => {
       rail
   >
     <v-list class="text-left">
-      <v-list-item link :title="t('home')" prepend-icon="mdi-home" @click="router.push('/')" disabled />
+      <v-list-item link :title="t('home')" prepend-icon="mdi-home" @click="router.push('/')" />
       <v-divider />
       <v-list-item link :title="t('games')" prepend-icon="mdi-gamepad" @click="router.push('/games')" />
       <v-list-item link :title="t('game-submit')" prepend-icon="mdi-form-select" @click="bIsLoggedIn ? router.push('/games/submit') : bIsSignInModalOpened = true" />
       <v-list-item link :title="t('games-pending')" prepend-icon="mdi-account-clock-outline" @click="router.push('/games/pending')" />
       <v-divider />
       <v-list-item v-if="bIsLoggedIn" link :title="t('accounts')" prepend-icon="mdi-account" @click="router.push('/accounts')" />
-      <v-list-item v-else link :title="t('login')" prepend-icon="mdi-account" @click="bIsSignInModalOpened = true" />
+      <v-list-item v-else link :title="t('login')" prepend-icon="mdi-login" @click="bIsSignInModalOpened = true" />
       <v-list-item link :title="t('settings')" prepend-icon="mdi-cog" @click="router.push('/settings')" />
     </v-list>
   </v-navigation-drawer>
 
   <v-dialog v-model="bIsSignInModalOpened">
     <v-card
-        :title="t('login')"
+        title="Bitmap ID"
         class="mx-auto pa-12 pb-8"
         elevation="8"
         max-width="448"
@@ -113,12 +124,13 @@ onMounted(() => {
           v-model="username"
           clearable
           density="compact"
-          :label="$t('id')" />
+          :label="$t('id')"
+          @keyup.enter="login(username, password)" />
       <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
         {{ t('password') }}
         <a
             class="text-caption text-decoration-none text-blue"
-            href="#"
+            href="https://wiki.prodbybitmap.com/wiki/특수:비밀번호재설정"
             rel="noopener noreferrer"
             target="_blank"
         >
@@ -135,15 +147,21 @@ onMounted(() => {
           :hint="t('password-rules')"
           name="input-10-1"
           counter
-          @click:append="bShowPassword = !bShowPassword" />
+          @click:append="bShowPassword = !bShowPassword"
+          @keyup.enter="login(username, password)" />
       <v-card
           class="mb-12"
           color="surface-variant"
           variant="tonal"
       >
-        <v-card-text class="text-medium-emphasis text-caption">
-          Warning: After 3 consecutive failed login attempts, you account will be temporarily locked for three hours. If you must login now, you can also click "Forgot login password?" below to reset the login password.
-        </v-card-text>
+        <v-card>
+          <v-card-title>
+            {{ authFailedReasons.bIsFailed ? t(authFailedReasons.result) : t('before-continuing') }}
+          </v-card-title>
+          <v-card-text class="text-medium-emphasis text-caption">
+            {{ authFailedReasons.bIsFailed ? t(authFailedReasons.reason) : t('login-notification') }}
+          </v-card-text>
+        </v-card>
       </v-card>
       <v-btn
           class="mb-8"
@@ -160,7 +178,7 @@ onMounted(() => {
       <v-card-text class="text-center">
         <a
             class="text-blue text-decoration-none"
-            href="#"
+            href="//wiki.prodbybitmap.com/w/index.php?title=특수:계정만들기"
             rel="noopener noreferrer"
             target="_blank"
         >

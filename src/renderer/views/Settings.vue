@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { useSettingsStore } from "../plugins/store";
+import { storeToRefs } from "pinia";
+
+const settingsStore = useSettingsStore();
+const { lang, screenMode } = storeToRefs(settingsStore);
 
 /*
  * General Settings
@@ -8,8 +13,6 @@ import { onMounted, ref } from "vue";
 // Screen Mode
 import { useTheme } from "vuetify";
 const theme = useTheme();
-
-const screenMode = ref('');
 
 const changeScreenMode = () => {
   console.log(screenMode.value);
@@ -28,18 +31,17 @@ const { current } = useLocale();
 const { locale, t } = useI18n();
 
 const changeLanguage = () => {
-  locale.value = selectedLanguage.value;
-  current.value = selectedLanguage.value;
+  locale.value = lang.value;
+  current.value = lang.value;
 }
 
-const selectedLanguage = ref<string>('');
 const supportedLanguages = ref([
   { text: '한국어', value: 'ko' },
   { text: 'English', value: 'en' },
 ]);
 
 onMounted(function () {
-  selectedLanguage.value = locale.value;
+  lang.value = locale.value;
   screenMode.value = theme.global.name.value;
   // window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
   //   if(event.matches) screenMode.value = 'dark';
@@ -64,7 +66,7 @@ onMounted(function () {
       </v-card-actions>
     </v-card>
     <v-card title="언어 (Language)">
-      <v-select v-model="selectedLanguage" :items="supportedLanguages" item-title="text" item-value="value" label="언어 (Language)" />
+      <v-select v-model="lang" :items="supportedLanguages" item-title="text" item-value="value" label="언어 (Language)" />
       <v-divider />
       <v-card-actions>
         <v-spacer />

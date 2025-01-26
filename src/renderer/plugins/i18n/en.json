@@ -26,6 +26,11 @@
   "password-rules": "At least 8 characters",
   "agree-terms": "I have agreed to Bitmap Production's Terms and Conditions of Use.",
   "agree-terms-link": "See Bitmap Production's Terms and Conditions of Use and Privacy Policy here.",
+  "login-required": "Bitmap services requires Bitmap account. Please click the Sign In button in the sidebar to sign in first.",
+  "before-continuing": "Before Continuing",
+  "login-notification": "By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.",
+  "Failed": "Authentication failed.",
+  "Incorrect username or password entered. Please try again.": "Invalid username or password.",
 
   "explore": "Explore",
   "details": "Details",

@@ -22,10 +22,13 @@ import { loadFonts } from "./plugins/webfontloader";
 
 // Store
 import { createPinia } from 'pinia'
+import piniaPersist from 'pinia-plugin-persistedstate';
 
 loadFonts();
 
 const app = createApp(App);
+const pinia = createPinia();
+pinia.use(piniaPersist);
 
 app.config.globalProperties.$filters = {
     formatDate(value: string, locale: string) {
@@ -38,4 +41,4 @@ app.config.globalProperties.$filters = {
     },
 };
 
-app.use(router).use(vuetify).use(i18n).use(Vue3Lottie, { name: "LottieAnimation"}).use(createPinia()).mount('#app');
+app.use(router).use(vuetify).use(i18n).use(Vue3Lottie, { name: "LottieAnimation"}).use(pinia).mount('#app');

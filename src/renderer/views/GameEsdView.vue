@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { onMounted, reactive } from "vue";
 import axios from "axios";
-import { Game } from "../types/GameList"
+import { useI18n } from "vue-i18n";
 import GameEsdDetails from "../components/GameEsdDetails.vue";
+import { Game } from "../types/GameList"
+import { useAuthStore } from "../plugins/store";
+import { storeToRefs } from "pinia";
+
+const authStore = useAuthStore();
+const { bIsLoggedIn } = storeToRefs(authStore);
+const { t } = useI18n();
 
 /*
  * Get API from server
@@ -47,6 +54,7 @@ onMounted(() => {
 
 <template>
   <v-container fluid>
+    <v-alert v-if="!bIsLoggedIn" closable :text="t('login-required')" type="error" style="margin-bottom: 30px"></v-alert>
     <v-row>
       <!-- 게임 아이템을 넣을 공간 -->
       <v-col v-for="game in state.games" :key="game.gameId" :cols="3">
@@ -62,7 +70,7 @@ onMounted(() => {
         </div>
         <div v-else>
           <!-- 정상 데이터를 표시 -->
-          <GameEsdDetails :gameObject="game" :platform="CurrentPlatform" />
+          <GameEsdDetails :gameObject="game" :platform="CurrentPlatform" :bIsLoggedIn="bIsLoggedIn" />
         </div>
       </v-col>
     </v-row>

@@ -14,12 +14,12 @@ import PlatformMacOSImage from '../assets/platformMac.png';
 // Markdown
 import { MdPreview } from "md-editor-v3";
 
-
 const { t } = useI18n();
 
 const props = defineProps<{
   gameObject: Game,
   platform: string,
+  bIsLoggedIn: boolean,
 }>();
 
 const YouTubeURL = computed(() => {
@@ -331,7 +331,7 @@ onMounted(() => {
         outlined color="primary"
         @click="openInstallModal()"
         v-if="InstallState === EInstallState.NotInstalled && props.gameObject.isReleased"
-        :disabled="!bIsPlatformCompatible"
+        :disabled="!bIsPlatformCompatible || !bIsLoggedIn"
       >{{ $t('install') }}</v-btn>
       <v-btn
         variant="tonal"
@@ -447,7 +447,7 @@ onMounted(() => {
             flat
             @click="openInstallModal()"
             v-if="InstallState === EInstallState.NotInstalled && props.gameObject.isReleased"
-            :disabled="!bIsPlatformCompatible"
+            :disabled="!bIsPlatformCompatible || !bIsLoggedIn"
         >{{ bIsPlatformCompatible ? $t('install') : $t('unsupported-platform') }}</v-btn>
         <v-btn
             variant="tonal"

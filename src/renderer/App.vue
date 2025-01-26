@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
-import { Vue3Lottie } from "vue3-lottie";
-import BitmapIntro from "./assets/lottie_BitmapBaseIntro.json";
 import Sidebar from "./components/Sidebar.vue";
 
 let CurrentPlatform = ref<string>('');
@@ -55,12 +53,6 @@ onUnmounted(() => {
     <v-main fill-width fluid>
       <Sidebar />
       <router-view />
-      <!--        <Vue3Lottie-->
-      <!--            :animationData="BitmapIntro"-->
-      <!--            :height="200"-->
-      <!--            :width="200"-->
-      <!--            :loop="false"-->
-      <!--        />-->
     </v-main>
   </v-app>
 </template>

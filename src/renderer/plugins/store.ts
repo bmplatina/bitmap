@@ -52,7 +52,6 @@ const useAuthStore = defineStore("auth", function() {
         bIsLoggedIn.value = inLoggedInState;
     }
 
-
     return {
         userName,
         userId,
@@ -66,4 +65,32 @@ const useAuthStore = defineStore("auth", function() {
     };
 });
 
-export { useInstallationStore, useAuthStore };
+const useSettingsStore = defineStore("settings", function() {
+    // Properties
+    const lang = ref<string>('');
+    const screenMode = ref<string>('');
+
+    // Getter
+    const getLanguage = computed(() => lang.value);
+    const getScreenMode = computed(() => screenMode.value);
+
+    // Setter
+    function setLanguage(newLanguage: string) {
+        lang.value = newLanguage;
+    }
+
+    function setScreenMode(newScreenMode: string) {
+        screenMode.value = newScreenMode;
+    }
+
+    return {
+        lang,
+        screenMode,
+        getLanguage,
+        getScreenMode,
+        setLanguage,
+        setScreenMode,
+    };
+});
+
+export { useInstallationStore, useAuthStore, useSettingsStore };
