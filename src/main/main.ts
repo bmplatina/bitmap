@@ -377,7 +377,7 @@ ipcMain.handle('game-install-info-get-by-index', (_, gameIdIndex: number): Promi
         console.error(err);
         reject(err);
       } else {
-        console.log("GetByIndex Succeed: ", typeof docs, docs);
+        // console.log("GetByIndex Succeed: ", typeof docs, docs);
         resolve(docs);
       }
     })
@@ -544,6 +544,46 @@ ipcMain.handle("register", async (event, username: string, email: string, passwo
   }
 });
 
+// 로그아웃 API 호출 핸들러
+ipcMain.handle("logout", async () => {
+  try {
+    const apiUrl = "https://wiki.prodbybitmap.com/w/api.php";
+    // 1️⃣ CSRF 토큰 가져오기
+    const tokenRes = await session.defaultSession.fetch(`${apiUrl}?action=query&meta=tokens&type=csrf&format=json`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    const tokenData = await tokenRes.json();
+    const csrfToken = tokenData?.query?.tokens?.csrftoken;
+    console.log("CSRF 토큰:", csrfToken);
+
+    if (!csrfToken) throw new Error("CSRF 토큰을 가져올 수 없습니다.");
+
+    // 2️⃣ 현재 세션의 쿠키 가져오기
+    const cookies = await session.defaultSession.cookies.get({ url: apiUrl });
+
+    // 3️⃣ 로그아웃 요청 보내기
+    const logoutRes = await session.defaultSession.fetch(`${apiUrl}?action=logout&format=json`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Cookie: cookies.map(c => `${c.name}=${c.value}`).join("; "), // 쿠키 전달
+      },
+      body: new URLSearchParams({ token: csrfToken }).toString(),
+    });
+
+    const logoutData = await logoutRes.json();
+    console.log("로그아웃 응답:", logoutData);
+
+    return { success: true, data: logoutData };
+  } catch (error: any) {
+    console.error("로그아웃 오류:", error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle("get-cookies", async (event, cookieName: string) => {
   try {
     const url = "https://wiki.prodbybitmap.com/w/api.php";
@@ -554,4 +594,4 @@ ipcMain.handle("get-cookies", async (event, cookieName: string) => {
     console.error('쿠키 가져오기 실패:', error);
     return null;
   }
-})
+});

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { computed, ref } from "vue";
 
 const useInstallationStore = defineStore('installation', {
     state: () => ({
@@ -27,4 +28,42 @@ const useInstallationStore = defineStore('installation', {
     },
 });
 
-export { useInstallationStore };
+const useAuthStore = defineStore("auth", function() {
+    // Properties
+    const userName = ref<string>('');
+    const userId = ref<number>(0);
+    const bIsLoggedIn = ref<boolean>(false);
+
+    // Getter
+    const getUserName = computed(() => userName.value);
+    const getUserId = computed(() => userId.value);
+    const getIsLoggedIn = computed(() => bIsLoggedIn.value);
+
+    // Setter
+    function setUserName(newUserName: string) {
+        userName.value = newUserName;
+    }
+
+    function setUserId(newUserId: number) {
+        userId.value = newUserId;
+    }
+
+    function setIsLoggedIn(inLoggedInState: boolean) {
+        bIsLoggedIn.value = inLoggedInState;
+    }
+
+
+    return {
+        userName,
+        userId,
+        bIsLoggedIn,
+        getUserName,
+        getUserId,
+        getIsLoggedIn,
+        setUserName,
+        setUserId,
+        setIsLoggedIn,
+    };
+});
+
+export { useInstallationStore, useAuthStore };

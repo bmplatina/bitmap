@@ -1,17 +1,40 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+import { storeToRefs } from "pinia";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "../plugins/store";
 
-const username = ref("");
+const router = useRouter();
+const authStore = useAuthStore();
+const { userName, userId, bIsLoggedIn } = storeToRefs(authStore);
+const { t } = useI18n();
+
+async function logout() {
+  try {
+    const result = await window.electronAPI.logout();
+    if (result.success) {
+      console.log("로그아웃 성공, ", result.logoutData);
+      bIsLoggedIn.value = false;
+      await router.push('/games');
+    }
+    else {
+      console.error("로그아웃 실패: ", result.error);
+    }
+  }
+  catch (error) {
+    console.error("IPC 로그인 요청 실패:", error);
+  }
+}
 
 onMounted(function () {
-  window.electronAPI.getCookies('overwikiUserName').then((res) => {
-    username.value = res;
-  });
 })
 </script>
 
 <template>
-  Hello, {{ username }}!
+  Hello, {{ userName }}!
+  <v-btn @click="logout"> {{ t('logout') }} </v-btn>
+
 </template>
 
 <style scoped>

@@ -47,6 +47,7 @@ export default interface ElectronApi {
 
   login: (username: string, password: string) => Promise<any>,
   register: (username: string, email: string, password: string) => Promise<boolean>,
+  logout: () => Promise<any>,
   getCookies: (cookieName: string) => Promise<string>,
 }
 

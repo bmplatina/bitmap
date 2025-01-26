@@ -75,5 +75,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Auth
   login: (username: string, password: string) => ipcRenderer.invoke('login', username, password),
   register: (username: string, email: string, password: string) => ipcRenderer.invoke('register', username, email, password),
+  logout: () => ipcRenderer.invoke('logout'),
   getCookies: (cookieName: string) => ipcRenderer.invoke('get-cookies', cookieName),
 });
