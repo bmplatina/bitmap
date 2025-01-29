@@ -1,10 +1,28 @@
 <script setup lang="ts">
+import { Game } from "../types/GameList";
+const props = defineProps<{
+  gameObject: Game,
+  platform: string,
+  bIsLoggedIn: boolean,
+}>();
+
 // Libraries
 import { onMounted, ref, computed } from 'vue'
-import { Game } from "../types/GameList";
 import { EInstallState, GameInstallInfo } from '../types/GameInstallInfo';
 import { useI18n } from 'vue-i18n';
 import dayjs from "dayjs";
+import { PlayerEvent, YoutubeIframe } from '@vue-youtube/component';
+import { usePlayer } from "@vue-youtube/core";
+
+const onReady = ((event: PlayerEvent) => {
+  event.target.playVideo();
+})
+
+// Use a template ref to reference the target element
+const player = ref();
+
+// Call the 'usePlayer' function with the desired video ID and target ref
+usePlayer(props.gameObject.gameVideoURL, player);
 
 // Images
 import UnknownImage from '../assets/unknownImage.png';
@@ -15,16 +33,6 @@ import PlatformMacOSImage from '../assets/platformMac.png';
 import { MdPreview } from "md-editor-v3";
 
 const { t } = useI18n();
-
-const props = defineProps<{
-  gameObject: Game,
-  platform: string,
-  bIsLoggedIn: boolean,
-}>();
-
-const YouTubeURL = computed(() => {
-  return `https://www.youtube.com/embed/${props.gameObject.gameVideoURL}`;
-});
 
 /*
  * Released Ago
@@ -383,15 +391,8 @@ onMounted(() => {
                 variant="tonal"
                 style="white-space: pre-line;"
             >
-              <iframe
-                  :src="YouTubeURL"
-                  class="mx-auto"
-                  frameborder="0" allowfullscreen
-                  sandbox="allow-scripts allow-same-origin allow-presentation"
-                  style="width: 512px; height: 288px; margin-top: 4%"
-                  referrerpolicy="no-referrer"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              ></iframe>
+              <youtube-iframe :video-id="gameObject.gameVideoURL" ref="youtube" @ready="onReady" />
+              <div ref="player" @ready="onReady" />
             </v-card>
             <v-card
                 class="mt-4 pa-3 rounded-xl"

@@ -1,7 +1,6 @@
 import { GameInstallInfo } from "../types/GameInstallInfo";
-import Electron = require("electron");
-import {ipcRenderer} from "electron";
 import {Settings} from "../types/Settings";
+import Electron = require("electron");
 
 /**
  * Should match main/preload.ts for typescript support in renderer
@@ -49,6 +48,8 @@ export default interface ElectronApi {
   register: (username: string, email: string, password: string) => Promise<boolean>,
   logout: () => Promise<any>,
   getCookies: (cookieName: string) => Promise<string>,
+
+  fetchData: (url: string) => Promise<any>,
 }
 
 declare global {

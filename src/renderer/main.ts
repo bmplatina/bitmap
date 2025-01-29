@@ -24,6 +24,8 @@ import { loadFonts } from "./plugins/webfontloader";
 import { createPinia } from 'pinia'
 import piniaPersist from 'pinia-plugin-persistedstate';
 
+import { createManager } from '@vue-youtube/core';
+
 loadFonts();
 
 const app = createApp(App);
@@ -41,4 +43,13 @@ app.config.globalProperties.$filters = {
     },
 };
 
-app.use(router).use(vuetify).use(i18n).use(Vue3Lottie, { name: "LottieAnimation"}).use(pinia).mount('#app');
+app
+    .use(router)
+    .use(vuetify)
+    .use(i18n)
+    .use(Vue3Lottie, {
+        name: "LottieAnimation"
+    })
+    .use(pinia)
+    .use(createManager())
+    .mount('#app');

@@ -30,6 +30,24 @@ let updaterIntervalId: NodeJS.Timeout;
 // Expose Window for Dialog Support
 let MAIN_WINDOW: BrowserWindow;
 
+// Express Proxy for bypassing CORS
+import express from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+const server = express();
+
+server.use(
+    "/youtube",
+    createProxyMiddleware({
+      target: "https://www.youtube.com/embed/",
+      changeOrigin: true,
+      pathRewrite: { "^/youtube": "" },
+    })
+);
+
+server.listen(Number(process.argv[2]) + 1, function () {
+  console.log(`Proxy server started at ${Number(process.argv[2]) + 1}`);
+});
+
 function createMainWindow () {
   const mainWindow = new BrowserWindow({
     title: "Bitmap",
@@ -54,7 +72,7 @@ function createMainWindow () {
       nodeIntegration: true,
       contextIsolation: true,
       webviewTag: true,
-      webSecurity: !bIsDev,
+      // webSecurity: !bIsDev,
       devTools: bIsDev
     }
   });
@@ -593,5 +611,14 @@ ipcMain.handle("get-cookies", async (event, cookieName: string) => {
   } catch (error) {
     console.error('쿠키 가져오기 실패:', error);
     return null;
+  }
+});
+
+ipcMain.handle('fetch-data', async (_, url: string) => {
+  try {
+    const response = await axios.get(url);
+    return response.data;
+  } catch (error: any) {
+    return { error: error.message };
   }
 });

@@ -77,4 +77,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   register: (username: string, email: string, password: string) => ipcRenderer.invoke('register', username, email, password),
   logout: () => ipcRenderer.invoke('logout'),
   getCookies: (cookieName: string) => ipcRenderer.invoke('get-cookies', cookieName),
+
+  // Bypass CORS
+  fetchData: (url: string) => ipcRenderer.invoke('fetch-data', url),
 });

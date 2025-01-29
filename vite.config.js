@@ -12,6 +12,9 @@ const config = defineConfig({
     publicDir: 'public',
     server: {
         port: 8080,
+        headers: {
+            "Content-Security-Policy": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube.com/embed/;",
+        }
     },
     open: false,
     build: {
